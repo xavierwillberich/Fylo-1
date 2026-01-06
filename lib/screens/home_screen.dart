@@ -8,6 +8,7 @@ import 'notifications_screen.dart';
 import 'profile_screen.dart';
 import 'search_screen.dart';
 import 'create_activity_screen.dart';
+import 'activity_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -82,38 +83,86 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         Row(
                           children: [
-                            IconButton(
-                              icon: const Icon(LucideIcons.search, color: Colors.white),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const SearchScreen(),
-                                  ),
-                                );
-                              },
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: IconButton(
+                                icon: const Icon(LucideIcons.search, color: Colors.white, size: 20),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const SearchScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
-                            IconButton(
-                              icon: const Icon(LucideIcons.bell, color: Colors.white),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const NotificationsScreen(),
+                            const SizedBox(width: 8),
+                            Stack(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.2),
+                                      width: 1,
+                                    ),
                                   ),
-                                );
-                              },
+                                  child: IconButton(
+                                    icon: const Icon(LucideIcons.bell, color: Colors.white, size: 20),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => const NotificationsScreen(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                Positioned(
+                                  right: 6,
+                                  top: 6,
+                                  child: Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            IconButton(
-                              icon: const Icon(LucideIcons.plus, color: Colors.white),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const CreateActivityScreen(),
-                                  ),
-                                );
-                              },
+                            const SizedBox(width: 8),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: IconButton(
+                                icon: const Icon(LucideIcons.plus, color: Color(0xFF9333EA), size: 20),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const CreateActivityScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ],
                         ),
@@ -226,10 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 16,
-                              ),
+                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                               child: RichText(
                                 text: TextSpan(
                                   children: [
@@ -260,7 +306,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                 children: events
                                     .map((event) => EventCard(
                                           event: event,
-                                          onTap: () {},
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => ActivityDetailScreen(
+                                                  event: event,
+                                                ),
+                                              ),
+                                            );
+                                          },
                                         ))
                                     .toList(),
                               ),
