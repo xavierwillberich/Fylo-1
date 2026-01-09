@@ -206,23 +206,31 @@ class PostCard extends StatelessWidget {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: isActive ? const Color(0xFFEF4444) : const Color(0xFF6B7280),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFFFEE2E2) : Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 20,
               color: isActive ? const Color(0xFFEF4444) : const Color(0xFF6B7280),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
             ),
-          ),
-        ],
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: isActive ? const Color(0xFFEF4444) : const Color(0xFF6B7280),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -61,25 +61,15 @@ class _PoolScreenState extends State<PoolScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
-      body: SafeArea(
-        child: Column(
-          children: [
-            GradientHeader(
-              height: 180,
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Pool',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
+      body: Column(
+        children: [
+          GradientHeader(
+            height: 140,
+            child: Column(
+              children: [
+                SizedBox(height: MediaQuery.of(context).padding.top + 16),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                     child: Row(
                       children: tabs.map((tab) {
                         final isActive = tab == activeTab;
@@ -91,17 +81,13 @@ class _PoolScreenState extends State<PoolScreen> {
                               });
                             },
                             child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              margin: const EdgeInsets.symmetric(horizontal: 5),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
                                 color: isActive
                                     ? Colors.white
-                                    : Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.3),
-                                  width: 2,
-                                ),
+                                    : Colors.white.withOpacity(0.25),
+                                borderRadius: BorderRadius.circular(22),
                               ),
                               child: Text(
                                 tab,
@@ -120,11 +106,11 @@ class _PoolScreenState extends State<PoolScreen> {
                       }).toList(),
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
-            Expanded(
-              child: ListView.builder(
+          ),
+          Expanded(
+            child: ListView.builder(
                 padding: const EdgeInsets.only(top: 20, bottom: 100),
                 itemCount: posts.length,
                 itemBuilder: (context, index) {
@@ -137,10 +123,9 @@ class _PoolScreenState extends State<PoolScreen> {
                     onFollow: () => toggleFollow(post.id),
                   );
                 },
-              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

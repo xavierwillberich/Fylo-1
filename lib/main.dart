@@ -3,9 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'screens/home_screen.dart';
 import 'screens/pool_screen.dart';
-import 'screens/notifications_screen.dart';
 import 'screens/messages_screen.dart';
-import 'screens/profile_screen.dart';
 
 void main() {
   runApp(const FyloApp());

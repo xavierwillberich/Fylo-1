@@ -20,6 +20,7 @@ class Event {
   final String? password;
   final List<String> images;
   final List<String> attendeeAvatars;
+  final bool isUserParticipating;
 
   Event({
     required this.id,
@@ -43,6 +44,7 @@ class Event {
     this.password,
     required this.images,
     required this.attendeeAvatars,
+    this.isUserParticipating = false,
   });
 
   String get activityId {

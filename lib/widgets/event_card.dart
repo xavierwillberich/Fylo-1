@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/event.dart';
+import 'dart:math' as math;
 
 class EventCard extends StatelessWidget {
   final Event event;
@@ -12,6 +13,23 @@ class EventCard extends StatelessWidget {
     required this.event,
     required this.onTap,
   });
+
+  IconData _getWeatherIcon() {
+    switch (event.weather) {
+      case Weather.clear:
+        return LucideIcons.sun;
+      case Weather.partlyCloudy:
+        return LucideIcons.cloudSun;
+      case Weather.cloudy:
+        return LucideIcons.cloud;
+      case Weather.rainy:
+        return LucideIcons.cloudRain;
+      case Weather.snowy:
+        return LucideIcons.snowflake;
+      default:
+        return LucideIcons.sun;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,30 +50,64 @@ class EventCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: CachedNetworkImage(
-                  imageUrl: event.images.first,
-                  width: 128,
-                  height: 128,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    width: 128,
-                    height: 128,
-                    color: Colors.grey[100],
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: CachedNetworkImage(
+                      imageUrl: event.images.first,
+                      width: 128,
+                      height: 128,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        width: 128,
+                        height: 128,
+                        color: Colors.grey[100],
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        width: 128,
+                        height: 128,
+                        color: Colors.grey[100],
+                        child: const Icon(Icons.error, color: Colors.grey),
                       ),
                     ),
                   ),
-                  errorWidget: (context, url, error) => Container(
-                    width: 128,
-                    height: 128,
-                    color: Colors.grey[100],
-                    child: const Icon(Icons.error, color: Colors.grey),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getWeatherIcon(),
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${event.temperature}°F',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
               const SizedBox(width: 16),
               Expanded(
