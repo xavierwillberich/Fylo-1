@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../models/event.dart';
-import '../data/sample_data.dart';
+import '../services/firebase_service.dart';
 import '../widgets/event_card.dart';
 import '../widgets/gradient_header.dart';
 import 'search_screen.dart';
@@ -18,6 +18,9 @@ import 'permissions_screen.dart' as permissions;
 import 'appearance_screen.dart' as appearance;
 import 'language_screen.dart' as language;
 import 'language_test_screen.dart' as language_test;
+import 'qr_scanner_screen.dart';
+import 'ai_assistant_screen.dart';
+import 'contact_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,15 +31,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedLocation = '附近';
+  final FirebaseService _firebaseService = FirebaseService();
+  final String _currentUserId = 'user_001';
 
-  List<Event> get filteredEvents {
-    final events = SampleData.getEvents();
-    return events;
-  }
-
-  Map<String, List<Event>> get groupedEvents {
+  Map<String, List<Event>> _groupEvents(List<Event> events) {
     final Map<String, List<Event>> grouped = {};
-    for (var event in filteredEvents) {
+    for (var event in events) {
       final key = '${event.date} ${event.month} ${event.year}';
       if (!grouped.containsKey(key)) {
         grouped[key] = [];
@@ -125,168 +125,246 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.only(bottom: 100),
-              children: [
-                // 你的活动 section
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                  child: Row(
-                    children: [
-                      const Text(
-                        '你的活动',
+            child: StreamBuilder<List<Event>>(
+              stream: _firebaseService.getEventsStream(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                final allEvents = snapshot.data ?? [];
+                final userEvents = allEvents
+                    .where((event) =>
+                        event.creatorId == _currentUserId ||
+                        event.participantIds.contains(_currentUserId))
+                    .toList();
+                final groupedUserEvents = _groupEvents(userEvents);
+                final groupedAllEvents = _groupEvents(allEvents);
+
+                return ListView(
+                  padding: const EdgeInsets.only(bottom: 100),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                      child: Row(
+                        children: [
+                          const Text(
+                            '你的活动',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1F2937),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            LucideIcons.chevronRight,
+                            size: 20,
+                            color: Colors.grey[400],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (userEvents.isEmpty)
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF3F4F6),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                LucideIcons.ticket,
+                                size: 28,
+                                color: Colors.grey[400],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                '你的日程安排很空闲。浏览下方活动，\n或点击 + 创建活动。',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                  height: 1.5,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      ...groupedUserEvents.entries.map((entry) {
+                        final eventList = entry.value;
+                        final firstEvent = eventList.first;
+                        
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                              child: RichText(
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: '${firstEvent.date}${firstEvent.month}',
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: ' / ${firstEvent.dayOfWeek}',
+                                      style: TextStyle(
+                                        color: Colors.grey[400],
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                              ),
+                              child: Column(
+                                children: eventList
+                                    .map((event) => EventCard(
+                                          event: event,
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => ActivityDetailScreen(
+                                                  event: event,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ))
+                                    .toList(),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                          ],
+                        );
+                      }).toList(),
+                    const SizedBox(height: 32),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                      child: const Text(
+                        '为你推荐',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1F2937),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        LucideIcons.chevronRight,
-                        size: 20,
-                        color: Colors.grey[400],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          LucideIcons.ticket,
-                          size: 28,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          '你的日程安排很空闲。浏览下方活动，\n或点击 + 创建活动。',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-                // 为你推荐 section
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                  child: const Text(
-                    '为你推荐',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1F2937),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                  child: GestureDetector(
-                    onTap: () {
-                      _showLocationPicker(context);
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _selectedLocation,
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.grey[400],
-                          ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                      child: GestureDetector(
+                        onTap: () {
+                          _showLocationPicker(context);
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _selectedLocation,
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Colors.grey[400],
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              LucideIcons.chevronDown,
+                              size: 16,
+                              color: Colors.grey[400],
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          LucideIcons.chevronDown,
-                          size: 16,
-                          color: Colors.grey[400],
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Event cards grouped by date
-                ...groupedEvents.entries.map((entry) {
-                  final events = entry.value;
-                  final firstEvent = events.first;
-                  
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                        child: RichText(
-                          text: TextSpan(
-                            children: [
-                              TextSpan(
-                                text: '${firstEvent.date}${firstEvent.month}',
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                    const SizedBox(height: 20),
+                    ...groupedAllEvents.entries.map((entry) {
+                      final eventList = entry.value;
+                      final firstEvent = eventList.first;
+                      
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                            child: RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '${firstEvent.date}${firstEvent.month}',
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: ' / ${firstEvent.dayOfWeek}',
+                                    style: TextStyle(
+                                      color: Colors.grey[400],
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              TextSpan(
-                                text: ' / ${firstEvent.dayOfWeek}',
-                                style: TextStyle(
-                                  color: Colors.grey[400],
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
-                      Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                        ),
-                        child: Column(
-                          children: events
-                              .map((event) => EventCard(
-                                    event: event,
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ActivityDetailScreen(
-                                            event: event,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ))
-                              .toList(),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                  );
-                }).toList(),
-              ],
+                          Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                            ),
+                            child: Column(
+                              children: eventList
+                                  .map((event) => EventCard(
+                                        event: event,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => ActivityDetailScreen(
+                                                event: event,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ))
+                                  .toList(),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+                      );
+                    }).toList(),
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -327,7 +405,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: '扫一扫',
                         onTap: () {
                           Navigator.pop(context);
-                          // TODO: Open scanner
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const QRScannerScreen(),
+                            ),
+                          );
                         },
                       ),
                       Divider(height: 1, color: Colors.grey[200]),
@@ -357,7 +440,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: 'AI助手',
                         onTap: () {
                           Navigator.pop(context);
-                          // TODO: Navigate to AI assistant
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: Colors.transparent,
+                            isScrollControlled: true,
+                            isDismissible: true,
+                            enableDrag: true,
+                            builder: (context) => DraggableScrollableSheet(
+                              initialChildSize: 0.92,
+                              minChildSize: 0.5,
+                              maxChildSize: 0.92,
+                              builder: (context, scrollController) => const AIAssistantScreen(),
+                            ),
+                          );
                         },
                       ),
                       Divider(height: 1, color: Colors.grey[200]),
@@ -366,7 +461,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: '创建群聊',
                         onTap: () {
                           Navigator.pop(context);
-                          // TODO: Navigate to create group chat
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ContactSelectionScreen(),
+                            ),
+                          );
                         },
                       ),
                     ],
@@ -411,51 +511,42 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showLocationPicker(BuildContext context) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.3),
       builder: (BuildContext context) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '为你推荐',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1F2937),
-                    ),
+        return Stack(
+          children: [
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 200,
+              left: 20,
+              right: 20,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildLocationOption('附近'),
+                      Divider(height: 1, color: Colors.grey[200]),
+                      _buildLocationOption('全球各地'),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              _buildLocationOption('附近'),
-              _buildLocationOption('全球各地'),
-              SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
@@ -530,18 +621,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
-      child: Container(
-        color: const Color(0xFFF9FAFB),
-        child: Column(
-          children: [
-            Expanded(
-              child: SafeArea(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                const SizedBox(height: 16),
-                      Container(
+      child: Stack(
+        children: [
+          Container(
+            color: const Color(0xFFF9FAFB),
+            height: double.infinity,
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                SizedBox(height: MediaQuery.of(context).padding.top + 16),
+              Container(
                         margin: const EdgeInsets.symmetric(horizontal: 20),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -910,14 +1005,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           showChevron: false,
                         ),
                       ),
-                const SizedBox(height: 24),
-                    ],
+              const SizedBox(height: 24),
+              SizedBox(height: MediaQuery.of(context).size.height + 200),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }

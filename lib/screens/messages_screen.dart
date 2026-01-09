@@ -204,127 +204,129 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return count;
   }
 
-  void _showAddMessageDialog() {
+  void _showAddMessageMenu(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(32),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6366F1), Color(0xFF9333EA)],
+      barrierColor: Colors.black.withOpacity(0.3),
+      builder: (BuildContext context) {
+        return Stack(
+          children: [
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 60,
+              right: 20,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  width: 160,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  LucideIcons.messageSquarePlus,
-                  color: Colors.white,
-                  size: 32,
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'New Conversation',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Choose how you want to start',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF6B7280),
-                ),
-              ),
-              const SizedBox(height: 24),
-              _buildDialogOption(
-                icon: LucideIcons.userPlus,
-                title: 'Add Contact',
-                subtitle: 'Search by username or ID',
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF3B82F6), Color(0xFF06B6D4)],
-                ),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AddContactScreen(),
-                    ),
-                  );
-                  if (result != null && mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Contact added: ${result['name']}'),
-                        backgroundColor: const Color(0xFF10B981),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildActionMenuItem(
+                        icon: LucideIcons.userPlus,
+                        title: 'Add Contact',
+                        onTap: () async {
+                          Navigator.pop(context);
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AddContactScreen(),
+                            ),
+                          );
+                          if (result != null && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Contact added: ${result['name']}'),
+                                backgroundColor: const Color(0xFF10B981),
+                              ),
+                            );
+                          }
+                        },
                       ),
-                    );
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildDialogOption(
-                icon: LucideIcons.users,
-                title: 'Create Group Chat',
-                subtitle: 'Select contacts to create a group',
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
-                ),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ContactSelectionScreen(),
-                    ),
-                  );
-                  if (result != null && mounted) {
-                    setState(() {
-                      groupChats.insert(0, {
-                        'id': 'g${groupChats.length + 1}',
-                        'name': result['groupName'],
-                        'avatar': 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=100&h=100&fit=crop',
-                        'lastMessage': 'Group created',
-                        'time': 'now',
-                        'isUnread': false,
-                        'participants': (result['selectedContacts'] as List).length + 1,
-                        'onlineCount': 0,
-                      });
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Group "${result['groupName']}" created'),
-                        backgroundColor: const Color(0xFF10B981),
+                      Divider(height: 1, color: Colors.grey[200]),
+                      _buildActionMenuItem(
+                        icon: LucideIcons.users,
+                        title: 'Create Group Chat',
+                        onTap: () async {
+                          Navigator.pop(context);
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ContactSelectionScreen(),
+                            ),
+                          );
+                          if (result != null && mounted) {
+                            setState(() {
+                              groupChats.insert(0, {
+                                'id': 'g${groupChats.length + 1}',
+                                'name': result['groupName'],
+                                'avatar': 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=100&h=100&fit=crop',
+                                'lastMessage': 'Group created',
+                                'time': 'now',
+                                'isUnread': false,
+                                'participants': (result['selectedContacts'] as List).length + 1,
+                                'onlineCount': 0,
+                              });
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Group "${result['groupName']}" created'),
+                                backgroundColor: const Color(0xFF10B981),
+                              ),
+                            );
+                          }
+                        },
                       ),
-                    );
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(
-                    color: Color(0xFF6B7280),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildActionMenuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: const Color(0xFF1F2937),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: Color(0xFF1F2937),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -473,7 +475,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                 padding: EdgeInsets.zero,
                                 icon: const Icon(LucideIcons.messageSquarePlus, color: Colors.white, size: 20),
                                 onPressed: () {
-                                  _showAddMessageDialog();
+                                  _showAddMessageMenu(context);
                                 },
                               ),
                             ),
@@ -482,210 +484,211 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Material(
-                            color: Colors.transparent,
-                            child: Ink(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    isGroupChatsCollapsed = false;
-                                  });
-                                  _scrollToSection(_groupChatsKey);
-                                },
-                                borderRadius: BorderRadius.circular(16),
-                                splashColor: Colors.white.withOpacity(0.3),
-                                highlightColor: Colors.white.withOpacity(0.1),
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(4),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.25),
-                                              borderRadius: BorderRadius.circular(6),
-                                            ),
-                                            child: const Icon(
-                                              LucideIcons.users,
-                                              color: Colors.white,
-                                              size: 14,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          const Text(
-                                            'Groups',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        '${groupChats.length}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                  if (!isSearching)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: Ink(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Material(
-                            color: Colors.transparent,
-                            child: Ink(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    isGroupChatsCollapsed = false;
-                                    isDirectMessagesCollapsed = false;
-                                  });
-                                  Future.delayed(const Duration(milliseconds: 100), () {
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      isGroupChatsCollapsed = false;
+                                    });
                                     _scrollToSection(_groupChatsKey);
-                                  });
-                                },
-                                borderRadius: BorderRadius.circular(16),
-                                splashColor: Colors.white.withOpacity(0.3),
-                                highlightColor: Colors.white.withOpacity(0.1),
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(4),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.25),
-                                              borderRadius: BorderRadius.circular(6),
+                                  },
+                                  borderRadius: BorderRadius.circular(16),
+                                  splashColor: Colors.white.withOpacity(0.3),
+                                  highlightColor: Colors.white.withOpacity(0.1),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(0.25),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: const Icon(
+                                                LucideIcons.users,
+                                                color: Colors.white,
+                                                size: 14,
+                                              ),
                                             ),
-                                            child: const Icon(
-                                              LucideIcons.messageCircle,
-                                              color: Colors.white,
-                                              size: 14,
+                                            const SizedBox(width: 6),
+                                            const Text(
+                                              'Groups',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          const Text(
-                                            'Unread',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        '$unreadCount',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w700,
+                                          ],
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          '${groupChats.length}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Material(
-                            color: Colors.transparent,
-                            child: Ink(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    isNotificationsCollapsed = false;
-                                  });
-                                  _scrollToSection(_notificationsKey);
-                                },
-                                borderRadius: BorderRadius.circular(16),
-                                splashColor: Colors.white.withOpacity(0.3),
-                                highlightColor: Colors.white.withOpacity(0.1),
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(4),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.25),
-                                              borderRadius: BorderRadius.circular(6),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: Ink(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      isGroupChatsCollapsed = false;
+                                      isDirectMessagesCollapsed = false;
+                                    });
+                                    Future.delayed(const Duration(milliseconds: 100), () {
+                                      _scrollToSection(_groupChatsKey);
+                                    });
+                                  },
+                                  borderRadius: BorderRadius.circular(16),
+                                  splashColor: Colors.white.withOpacity(0.3),
+                                  highlightColor: Colors.white.withOpacity(0.1),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(0.25),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: const Icon(
+                                                LucideIcons.messageCircle,
+                                                color: Colors.white,
+                                                size: 14,
+                                              ),
                                             ),
-                                            child: const Icon(
-                                              LucideIcons.bell,
-                                              color: Colors.white,
-                                              size: 14,
+                                            const SizedBox(width: 6),
+                                            const Text(
+                                              'Unread',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          const Text(
-                                            'Alerts',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        '$unreadNotificationsCount',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w700,
+                                          ],
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          '$unreadCount',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: Ink(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      isNotificationsCollapsed = false;
+                                    });
+                                    _scrollToSection(_notificationsKey);
+                                  },
+                                  borderRadius: BorderRadius.circular(16),
+                                  splashColor: Colors.white.withOpacity(0.3),
+                                  highlightColor: Colors.white.withOpacity(0.1),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(0.25),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: const Icon(
+                                                LucideIcons.bell,
+                                                color: Colors.white,
+                                                size: 14,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            const Text(
+                                              'Alerts',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          '$unreadNotificationsCount',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                ),
                 if (isSearching)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -1108,8 +1111,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                 fontSize: 15,
                                 color: isUnread ? Colors.black : const Color(0xFF111827),
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          const SizedBox(width: 8),
                           Text(
                             chat['time'],
                             style: const TextStyle(

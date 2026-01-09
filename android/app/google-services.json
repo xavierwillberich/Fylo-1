@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "267035792691",
+    "firebase_url": "https://lezgo-4d9fb-default-rtdb.firebaseio.com",
+    "project_id": "lezgo-4d9fb",
+    "storage_bucket": "lezgo-4d9fb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:267035792691:android:2a520ae1011e7698081a46",
+        "android_client_info": {
+          "package_name": "com.example.fylo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "267035792691-k6ojcstdhb1tm768eule7v9qtvof5c3r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyq3vEkutpwh0omV6U5RbG15aJ4ysEVOk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "267035792691-k6ojcstdhb1tm768eule7v9qtvof5c3r.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "267035792691-c0p4eklrmanfq9onlltddomk14onhu8v.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.community"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

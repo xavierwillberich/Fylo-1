@@ -22,6 +22,38 @@ class Post {
     required this.isFollowing,
     this.relatedActivity,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user': user.toJson(),
+      'content': content.toJson(),
+      'timestamp': timestamp,
+      'likes': likes,
+      'comments': comments,
+      'shares': shares,
+      'isLiked': isLiked,
+      'isFollowing': isFollowing,
+      'relatedActivity': relatedActivity?.toJson(),
+    };
+  }
+
+  factory Post.fromJson(Map<String, dynamic> json) {
+    return Post(
+      id: json['id'] as int,
+      user: PostUser.fromJson(json['user'] as Map<String, dynamic>),
+      content: PostContent.fromJson(json['content'] as Map<String, dynamic>),
+      timestamp: json['timestamp'] as String,
+      likes: json['likes'] as int,
+      comments: json['comments'] as int,
+      shares: json['shares'] as int,
+      isLiked: json['isLiked'] as bool,
+      isFollowing: json['isFollowing'] as bool,
+      relatedActivity: json['relatedActivity'] != null
+          ? RelatedActivity.fromJson(json['relatedActivity'] as Map<String, dynamic>)
+          : null,
+    );
+  }
 }
 
 class PostUser {
@@ -34,6 +66,22 @@ class PostUser {
     required this.username,
     required this.avatar,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'username': username,
+      'avatar': avatar,
+    };
+  }
+
+  factory PostUser.fromJson(Map<String, dynamic> json) {
+    return PostUser(
+      name: json['name'] as String,
+      username: json['username'] as String,
+      avatar: json['avatar'] as String,
+    );
+  }
 }
 
 class PostContent {
@@ -44,6 +92,20 @@ class PostContent {
     required this.text,
     required this.images,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'text': text,
+      'images': images,
+    };
+  }
+
+  factory PostContent.fromJson(Map<String, dynamic> json) {
+    return PostContent(
+      text: json['text'] as String,
+      images: List<String>.from(json['images'] as List),
+    );
+  }
 }
 
 class RelatedActivity {
@@ -56,4 +118,20 @@ class RelatedActivity {
     required this.title,
     required this.image,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'activityId': activityId,
+      'title': title,
+      'image': image,
+    };
+  }
+
+  factory RelatedActivity.fromJson(Map<String, dynamic> json) {
+    return RelatedActivity(
+      activityId: json['activityId'] as String,
+      title: json['title'] as String,
+      image: json['image'] as String,
+    );
+  }
 }

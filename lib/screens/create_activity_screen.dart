@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../models/event.dart';
+import '../services/firebase_service.dart';
 
 class CreateActivityScreen extends StatefulWidget {
   const CreateActivityScreen({super.key});
@@ -12,6 +14,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   final TextEditingController _activityNameController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final FirebaseService _firebaseService = FirebaseService();
   
   DateTime _startDateTime = DateTime.now();
   DateTime _endDateTime = DateTime.now().add(const Duration(hours: 1));
@@ -21,6 +24,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   String _participantLimit = '不限人数';
   String _price = '免费';
   String? _selectedCoverImage;
+  final String _currentUserId = 'user_001';
 
   @override
   void dispose() {
@@ -50,11 +54,10 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
               children: [
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: const CircleAvatar(
-                    radius: 20,
-                    backgroundImage: NetworkImage(
-                      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-                    ),
+                  child: const Icon(
+                    LucideIcons.x,
+                    color: Colors.white,
+                    size: 24,
                   ),
                 ),
                 const Text(
@@ -97,41 +100,51 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                       height: 200,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            const Color(0xFF6366F1).withOpacity(0.3),
-                            const Color(0xFF9333EA).withOpacity(0.3),
-                            const Color(0xFFEC4899).withOpacity(0.3),
-                          ],
-                        ),
+                        gradient: _selectedCoverImage == null
+                            ? LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  const Color(0xFF6366F1).withOpacity(0.3),
+                                  const Color(0xFF9333EA).withOpacity(0.3),
+                                  const Color(0xFFEC4899).withOpacity(0.3),
+                                ],
+                              )
+                            : null,
+                        image: _selectedCoverImage != null
+                            ? DecorationImage(
+                                image: AssetImage(_selectedCoverImage!),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
                         border: Border.all(
                           color: Colors.white.withOpacity(0.2),
                           width: 2,
                         ),
                       ),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              LucideIcons.image,
-                              color: Colors.white.withOpacity(0.8),
-                              size: 48,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              '点击添加封面图片',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
+                      child: _selectedCoverImage == null
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    LucideIcons.image,
+                                    color: Colors.white.withOpacity(0.8),
+                                    size: 48,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    '点击添加封面图片',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
+                            )
+                          : null,
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -934,28 +947,46 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                     childAspectRatio: 0.85,
                     children: [
                       _buildImageCard(
-                        'https://picsum.photos/400/500?random=1',
-                        '新年',
-                        '49 张图片',
-                        () => _selectCoverImage('https://picsum.photos/400/500?random=1'),
+                        'assets/images/Board Games.jpg',
+                        '桌游',
+                        'Board Games',
+                        () => _selectCoverImage('assets/images/Board Games.jpg'),
                       ),
                       _buildImageCard(
-                        'https://picsum.photos/400/500?random=2',
-                        '春节',
-                        '38 张图片',
-                        () => _selectCoverImage('https://picsum.photos/400/500?random=2'),
+                        'assets/images/Coffee Chat.jpg',
+                        '咖啡聊天',
+                        'Coffee Chat',
+                        () => _selectCoverImage('assets/images/Coffee Chat.jpg'),
                       ),
                       _buildImageCard(
-                        'https://picsum.photos/400/500?random=3',
-                        '科技',
-                        '52 张图片',
-                        () => _selectCoverImage('https://picsum.photos/400/500?random=3'),
+                        'assets/images/Gym.jpg',
+                        '健身',
+                        'Gym',
+                        () => _selectCoverImage('assets/images/Gym.jpg'),
                       ),
                       _buildImageCard(
-                        'https://picsum.photos/400/500?random=4',
-                        '派对',
-                        '45 张图片',
-                        () => _selectCoverImage('https://picsum.photos/400/500?random=4'),
+                        'assets/images/KTV.jpg',
+                        'KTV',
+                        'KTV',
+                        () => _selectCoverImage('assets/images/KTV.jpg'),
+                      ),
+                      _buildImageCard(
+                        'assets/images/hiking.jpg',
+                        '徒步',
+                        'Hiking',
+                        () => _selectCoverImage('assets/images/hiking.jpg'),
+                      ),
+                      _buildImageCard(
+                        'assets/images/Potluck.jpg',
+                        '聚餐',
+                        'Potluck',
+                        () => _selectCoverImage('assets/images/Potluck.jpg'),
+                      ),
+                      _buildImageCard(
+                        'assets/images/Others.jpg',
+                        '其他',
+                        'Others',
+                        () => _selectCoverImage('assets/images/Others.jpg'),
                       ),
                     ],
                   ),
@@ -987,8 +1018,12 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
     );
   }
 
-  void _saveActivity() {
+  void _saveActivity() async {
+    print('_saveActivity called');
+    print('Activity name: ${_activityNameController.text}');
+    
     if (_activityNameController.text.isEmpty) {
+      print('Activity name is empty, showing error');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('请输入活动名称'),
@@ -998,20 +1033,75 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
       return;
     }
 
-    final activityData = {
-      'name': _activityNameController.text,
-      'startDateTime': _startDateTime.toIso8601String(),
-      'endDateTime': _endDateTime.toIso8601String(),
-      'location': _locationController.text,
-      'description': _descriptionController.text,
-      'requiresApproval': _requiresApproval,
-      'price': _price,
-      'visibility': _visibility,
-      'participantLimit': _participantLimit,
-      'coverImage': _selectedCoverImage,
-    };
+    try {
+      print('Creating event object...');
+      final event = Event(
+        id: DateTime.now().millisecondsSinceEpoch,
+        date: _startDateTime.day.toString(),
+        month: _getMonthName(_startDateTime.month),
+        year: _startDateTime.year.toString(),
+        dayOfWeek: _getDayOfWeek(_startDateTime),
+        weather: Weather.clear,
+        temperature: 20,
+        category: 'Activity',
+        title: _activityNameController.text,
+        description: _descriptionController.text,
+        time: '${_startDateTime.hour}:${_startDateTime.minute.toString().padLeft(2, '0')}',
+        location: _locationController.text,
+        participants: 1,
+        budget: _parseBudget(_price),
+        recruiting: true,
+        proficiency: ProficiencyLevel.beginner,
+        genderRestriction: GenderRestriction.noRestrictions,
+        passwordRequired: false,
+        images: _selectedCoverImage != null ? [_selectedCoverImage!] : [],
+        attendeeAvatars: [],
+        isUserParticipating: true,
+        creatorId: _currentUserId,
+        participantIds: [_currentUserId],
+      );
 
-    Navigator.pop(context, activityData);
+      print('Saving event to Firebase...');
+      await _firebaseService.addEvent(event);
+      print('Event saved successfully');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('活动创建成功'),
+            backgroundColor: Color(0xFF10B981),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e, stackTrace) {
+      print('Error saving activity: $e');
+      print('Stack trace: $stackTrace');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('创建失败: $e'),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+      }
+    }
+  }
+
+  String _getMonthName(int month) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[month - 1];
+  }
+
+  String _getDayOfWeek(DateTime dateTime) {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return days[dateTime.weekday - 1];
+  }
+
+  int _parseBudget(String price) {
+    if (price == '免费') return 0;
+    final match = RegExp(r'\d+').firstMatch(price);
+    return match != null ? int.parse(match.group(0)!) : 0;
   }
 
   Widget _buildCategoryChip(String label, bool isSelected) {
@@ -1061,7 +1151,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         image: DecorationImage(
-          image: NetworkImage(imageUrl),
+          image: AssetImage(imageUrl),
           fit: BoxFit.cover,
         ),
       ),

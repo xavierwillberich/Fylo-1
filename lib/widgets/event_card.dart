@@ -54,28 +54,51 @@ class EventCard extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: CachedNetworkImage(
-                      imageUrl: event.images.first,
-                      width: 128,
-                      height: 128,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        width: 128,
-                        height: 128,
-                        color: Colors.grey[100],
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
+                    child: event.images.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: event.images.first,
+                            width: 128,
+                            height: 128,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              width: 128,
+                              height: 128,
+                              color: Colors.grey[100],
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              width: 128,
+                              height: 128,
+                              color: Colors.grey[100],
+                              child: const Icon(Icons.error, color: Colors.grey),
+                            ),
+                          )
+                        : Container(
+                            width: 128,
+                            height: 128,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  const Color(0xFF6366F1).withOpacity(0.3),
+                                  const Color(0xFF9333EA).withOpacity(0.3),
+                                  const Color(0xFFEC4899).withOpacity(0.3),
+                                ],
+                              ),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                LucideIcons.image,
+                                size: 48,
+                                color: Colors.white70,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        width: 128,
-                        height: 128,
-                        color: Colors.grey[100],
-                        child: const Icon(Icons.error, color: Colors.grey),
-                      ),
-                    ),
                   ),
                   Positioned(
                     top: 8,
