@@ -1,70 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'profile_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart';
+import '../services/firebase_service.dart';
+import '../models/event.dart';
+import '../core/widgets/app_error_view.dart';
+import 'settings_screen.dart';
+import 'edit_profile_screen.dart';
+import 'activity_detail_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {
-  const UserProfileScreen({super.key});
+  /// 用户 ID，不传则显示当前登录用户
+  final String? userId;
+
+  const UserProfileScreen({super.key, this.userId});
 
   @override
   State<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
-class _UserProfileScreenState extends State<UserProfileScreen> with SingleTickerProviderStateMixin {
+class _UserProfileScreenState extends State<UserProfileScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
-  final List<Map<String, dynamic>> _userPosts = [
-    {
-      'image': 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=400',
-      'likes': 234,
-      'comments': 12,
-    },
-    {
-      'image': 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400',
-      'likes': 189,
-      'comments': 8,
-    },
-    {
-      'image': 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=400',
-      'likes': 456,
-      'comments': 23,
-    },
-    {
-      'image': 'https://images.unsplash.com/photo-1505765050516-f72dcac9c60e?w=400',
-      'likes': 312,
-      'comments': 15,
-    },
-    {
-      'image': 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400',
-      'likes': 567,
-      'comments': 34,
-    },
-    {
-      'image': 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400',
-      'likes': 423,
-      'comments': 19,
-    },
-  ];
+  final FirebaseService _firebaseService = FirebaseService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  final List<Map<String, dynamic>> _userActivities = [
-    {
-      'title': 'Coffee Chat Downtown',
-      'image': 'https://images.unsplash.com/photo-1511920170033-f8396924c348?w=400',
-      'date': 'Jan 15, 2026',
-      'participants': 8,
-    },
-    {
-      'title': 'Board Games Night',
-      'image': 'https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?w=400',
-      'date': 'Jan 10, 2026',
-      'participants': 12,
-    },
-    {
-      'title': 'Gym Session',
-      'image': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400',
-      'date': 'Jan 8, 2026',
-      'participants': 6,
-    },
-  ];
+  // 是否是当前用户的主页
+  bool get _isCurrentUser {
+    final currentUid = AuthService.instance.currentUserId;
+    return currentUid != null && (_targetUserId == currentUid);
+  }
+
+  // 目标用户 ID
+  String? get _targetUserId => widget.userId ?? AuthService.instance.currentUserId;
+
+  // 用户信息
+  String get _userName {
+    final user = AuthService.instance.currentUser;
+    if (user == null) return 'User';
+    return user.displayName ?? user.email?.split('@').first ?? 'User';
+  }
+
+  String get _userInitial {
+    final name = _userName;
+    return name.isNotEmpty ? name[0].toUpperCase() : 'U';
+  }
+
+  String? get _userPhotoUrl => AuthService.instance.currentUser?.photoURL;
 
   @override
   void initState() {
@@ -80,6 +62,50 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
+    final targetUserId = _targetUserId;
+
+    // 未登录
+    if (targetUserId == null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF9FAFB),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF111827)),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: const Text('Profile'),
+        ),
+        body: const AppErrorView(
+          title: '请先登录',
+          message: '登录后即可查看个人主页',
+          icon: LucideIcons.logIn,
+        ),
+      );
+    }
+
+    // 查看他人主页（目前不支持，因为 rules 限制）
+    if (!_isCurrentUser) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF9FAFB),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF111827)),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: const Text('Profile'),
+        ),
+        body: const AppErrorView(
+          title: '暂不支持查看他人主页',
+          message: '此功能即将上线，敬请期待',
+          icon: LucideIcons.userX,
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       body: NestedScrollView(
@@ -95,9 +121,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                 icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF111827)),
                 onPressed: () => Navigator.pop(context),
               ),
-              title: const Text(
-                'Sarah Chen',
-                style: TextStyle(
+              title: Text(
+                _userName,
+                style: const TextStyle(
                   color: Color(0xFF111827),
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -105,13 +131,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
               ),
               centerTitle: false,
               actions: [
+                // P0-3: 跳转到 SettingsScreen
                 IconButton(
                   icon: const Icon(LucideIcons.settings, color: Color(0xFF111827)),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ProfileScreen(),
+                        builder: (context) => const SettingsScreen(),
                       ),
                     );
                   },
@@ -127,249 +154,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
                 color: Colors.white,
                 child: Column(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 88,
-                                height: 88,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFF6366F1), Color(0xFF9333EA)],
-                                  ),
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 3,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'S',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 36,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 24),
-                              Expanded(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                  children: [
-                                    _buildStatColumn('42', 'Posts'),
-                                    _buildStatColumn('1.2K', 'Followers'),
-                                    _buildStatColumn('328', 'Following'),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Sarah Chen',
-                                  style: TextStyle(
-                                    color: Color(0xFF111827),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  '🎨 Creative Soul | 📍 San Francisco',
-                                  style: TextStyle(
-                                    color: Color(0xFF6B7280),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Love exploring new activities and meeting new people! ✨\nAlways up for coffee chats and outdoor adventures 🌟',
-                                  style: TextStyle(
-                                    color: Color(0xFF374151),
-                                    fontSize: 14,
-                                    height: 1.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const EditProfileScreen(),
-                                      ),
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF6366F1),
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Edit Profile',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: OutlinedButton(
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Share profile')),
-                                    );
-                                  },
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: const Color(0xFF111827),
-                                    side: const BorderSide(color: Color(0xFFE5E7EB)),
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Share Profile',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  const Color(0xFF6366F1).withOpacity(0.1),
-                                  const Color(0xFF9333EA).withOpacity(0.1),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: const Color(0xFF6366F1).withOpacity(0.2),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF6366F1).withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    LucideIcons.award,
-                                    color: Color(0xFF6366F1),
-                                    size: 20,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                const Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Top Contributor',
-                                        style: TextStyle(
-                                          color: Color(0xFF111827),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      SizedBox(height: 2),
-                                      Text(
-                                        'Organized 15+ activities this month',
-                                        style: TextStyle(
-                                          color: Color(0xFF6B7280),
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Icon(
-                                  LucideIcons.chevronRight,
-                                  color: Color(0xFF6366F1),
-                                  size: 20,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border(
-                          bottom: BorderSide(
-                            color: Colors.grey[200]!,
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                      child: TabBar(
-                        controller: _tabController,
-                        indicatorColor: const Color(0xFF6366F1),
-                        indicatorWeight: 2,
-                        labelColor: const Color(0xFF111827),
-                        unselectedLabelColor: const Color(0xFF9CA3AF),
-                        labelStyle: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        tabs: const [
-                          Tab(
-                            icon: Icon(LucideIcons.grid, size: 20),
-                            text: 'Posts',
-                          ),
-                          Tab(
-                            icon: Icon(LucideIcons.calendar, size: 20),
-                            text: 'Activities',
-                          ),
-                          Tab(
-                            icon: Icon(LucideIcons.bookmark, size: 20),
-                            text: 'Saved',
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildProfileHeader(),
+                    _buildTabBar(),
                   ],
                 ),
               ),
@@ -378,15 +164,202 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildPostsGrid(),
-                  _buildActivitiesList(),
-                  _buildSavedGrid(),
+                  _buildPostsTab(),
+                  _buildActivitiesTab(),
+                  _buildAboutTab(),
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildProfileHeader() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // 用户头像
+              _buildAvatar(88),
+              const SizedBox(width: 24),
+              // 统计信息 - 使用 StreamBuilder 获取真实数据
+              Expanded(
+                child: _buildStatsRow(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // 用户信息
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _userName,
+                  style: const TextStyle(
+                    color: Color(0xFF111827),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                // 从 Firestore 读取 bio
+                _buildUserBio(),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          // 操作按钮
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EditProfileScreen(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Edit Profile',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('分享功能即将上线'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF111827),
+                    side: const BorderSide(color: Color(0xFFE5E7EB)),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Share Profile',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(double size) {
+    final photoUrl = _userPhotoUrl;
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 3),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipOval(
+          child: Image.network(
+            photoUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _buildAvatarPlaceholder(size),
+          ),
+        ),
+      );
+    }
+    return _buildAvatarPlaceholder(size);
+  }
+
+  Widget _buildAvatarPlaceholder(double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF6366F1), Color(0xFF9333EA)],
+        ),
+        border: Border.all(color: Colors.white, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          _userInitial,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: size * 0.4,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatsRow() {
+    final userId = _targetUserId!;
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore
+          .collection('posts')
+          .where('userId', isEqualTo: userId)
+          .snapshots(),
+      builder: (context, postsSnapshot) {
+        final postsCount = postsSnapshot.data?.docs.length ?? 0;
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildStatColumn('$postsCount', 'Posts'),
+            _buildStatColumn('--', 'Followers'),
+            _buildStatColumn('--', 'Following'),
+          ],
+        );
+      },
     );
   }
 
@@ -413,146 +386,374 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
     );
   }
 
-  Widget _buildPostsGrid() {
-    return GridView.builder(
-      padding: const EdgeInsets.all(2),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 2,
-        mainAxisSpacing: 2,
+  Widget _buildUserBio() {
+    final userId = _targetUserId!;
+    return StreamBuilder<DocumentSnapshot>(
+      stream: _firestore.collection('users').doc(userId).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Text(
+            '加载失败',
+            style: TextStyle(color: Color(0xFF6B7280), fontSize: 14),
+          );
+        }
+
+        final data = snapshot.data?.data() as Map<String, dynamic>?;
+        final bio = data?['bio'] as String?;
+        final location = data?['location'] as String?;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (location != null && location.isNotEmpty)
+              Text(
+                '📍 $location',
+                style: const TextStyle(
+                  color: Color(0xFF6B7280),
+                  fontSize: 14,
+                ),
+              ),
+            if (bio != null && bio.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                bio,
+                style: const TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+            ],
+            if ((bio == null || bio.isEmpty) && (location == null || location.isEmpty))
+              const Text(
+                '暂无简介，点击编辑资料添加',
+                style: TextStyle(
+                  color: Color(0xFF9CA3AF),
+                  fontSize: 14,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.grey[200]!,
+            width: 1,
+          ),
+        ),
       ),
-      itemCount: _userPosts.length,
-      itemBuilder: (context, index) {
-        final post = _userPosts[index];
-        return GestureDetector(
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Post ${index + 1} tapped')),
+      child: TabBar(
+        controller: _tabController,
+        indicatorColor: const Color(0xFF6366F1),
+        indicatorWeight: 2,
+        labelColor: const Color(0xFF111827),
+        unselectedLabelColor: const Color(0xFF9CA3AF),
+        labelStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+        tabs: const [
+          Tab(
+            icon: Icon(LucideIcons.grid, size: 20),
+            text: 'Posts',
+          ),
+          Tab(
+            icon: Icon(LucideIcons.calendar, size: 20),
+            text: 'Activities',
+          ),
+          Tab(
+            icon: Icon(LucideIcons.user, size: 20),
+            text: 'About',
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Posts Tab - 从 Firestore 获取真实数据
+  Widget _buildPostsTab() {
+    final userId = _targetUserId!;
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore
+          .collection('posts')
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .limit(20)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return AppErrorView.fromError(
+            snapshot.error,
+            onRetry: () => setState(() {}),
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final docs = snapshot.data?.docs ?? [];
+
+        if (docs.isEmpty) {
+          return _buildEmptyState(
+            icon: LucideIcons.image,
+            title: '暂无帖子',
+            subtitle: '发布你的第一个帖子吧',
+          );
+        }
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(2),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 2,
+            mainAxisSpacing: 2,
+          ),
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+            final data = docs[index].data() as Map<String, dynamic>;
+            final imageUrl = data['imageUrl'] as String? ?? '';
+            final likes = data['likes'] as int? ?? 0;
+
+            return GestureDetector(
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('帖子详情页即将上线'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (imageUrl.isNotEmpty)
+                    Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: Colors.grey[200],
+                        child: const Icon(LucideIcons.image, color: Colors.grey),
+                      ),
+                    )
+                  else
+                    Container(
+                      color: Colors.grey[200],
+                      child: const Icon(LucideIcons.fileText, color: Colors.grey),
+                    ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(LucideIcons.heart, color: Colors.white, size: 12),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$likes',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             );
           },
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.network(
-                post['image'],
-                fit: BoxFit.cover,
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        LucideIcons.heart,
-                        color: Colors.white,
-                        size: 12,
+        );
+      },
+    );
+  }
+
+  // Activities Tab - 从 Firestore 获取真实数据
+  Widget _buildActivitiesTab() {
+    final userId = _targetUserId!;
+    return StreamBuilder<List<Event>>(
+      stream: _firebaseService.getEventsStream(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return AppErrorView.fromError(
+            snapshot.error,
+            onRetry: () => setState(() {}),
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final allEvents = snapshot.data ?? [];
+        // 过滤出用户创建的活动
+        final userEvents = allEvents
+            .where((e) => e.creatorId == userId)
+            .toList();
+
+        if (userEvents.isEmpty) {
+          return _buildEmptyState(
+            icon: LucideIcons.calendar,
+            title: '暂无活动',
+            subtitle: '创建你的第一个活动吧',
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: userEvents.length,
+          itemBuilder: (context, index) {
+            final event = userEvents[index];
+            return _buildActivityCard(event);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildActivityCard(Event event) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ActivityDetailScreen(event: event),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: event.images.isNotEmpty
+                  ? Image.network(
+                      event.images.first,
+                      height: 160,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        height: 160,
+                        color: Colors.grey[200],
+                        child: const Icon(LucideIcons.image, size: 48, color: Colors.grey),
                       ),
+                    )
+                  : Container(
+                      height: 160,
+                      color: Colors.grey[200],
+                      child: const Center(
+                        child: Icon(LucideIcons.calendar, size: 48, color: Colors.grey),
+                      ),
+                    ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    event.title,
+                    style: const TextStyle(
+                      color: Color(0xFF111827),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(LucideIcons.calendar, size: 14, color: Colors.grey[600]),
                       const SizedBox(width: 4),
                       Text(
-                        '${post['likes']}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        '${event.date} ${event.month}',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(LucideIcons.users, size: 14, color: Colors.grey[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${event.participantIds.length} joined',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildActivitiesList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _userActivities.length,
-      itemBuilder: (context, index) {
-        final activity = _userActivities[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
+  // About Tab - 显示用户详细信息
+  Widget _buildAboutTab() {
+    final userId = _targetUserId!;
+    return StreamBuilder<DocumentSnapshot>(
+      stream: _firestore.collection('users').doc(userId).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return AppErrorView.fromError(
+            snapshot.error,
+            onRetry: () => setState(() {}),
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final data = snapshot.data?.data() as Map<String, dynamic>?;
+
+        if (data == null) {
+          return _buildEmptyState(
+            icon: LucideIcons.user,
+            title: '暂无信息',
+            subtitle: '完善你的个人资料吧',
+          );
+        }
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.network(
-                  activity['image'],
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      activity['title'],
-                      style: const TextStyle(
-                        color: Color(0xFF111827),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          LucideIcons.calendar,
-                          size: 14,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          activity['date'],
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Icon(
-                          LucideIcons.users,
-                          size: 14,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${activity['participants']} joined',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+              _buildInfoCard('个人简介', data['bio'] as String? ?? '暂无简介'),
+              const SizedBox(height: 16),
+              _buildInfoCard('所在地', data['location'] as String? ?? '暂无位置'),
+              const SizedBox(height: 16),
+              _buildInfoCard('邮箱', data['email'] as String? ?? AuthService.instance.currentUser?.email ?? '暂无邮箱'),
+              const SizedBox(height: 16),
+              if (data['interests'] != null)
+                _buildInterestsCard(List<String>.from(data['interests'] ?? [])),
             ],
           ),
         );
@@ -560,7 +761,103 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
     );
   }
 
-  Widget _buildSavedGrid() {
+  Widget _buildInfoCard(String title, String content) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Color(0xFF6B7280),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            content,
+            style: const TextStyle(
+              color: Color(0xFF111827),
+              fontSize: 15,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInterestsCard(List<String> interests) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '兴趣爱好',
+            style: TextStyle(
+              color: Color(0xFF6B7280),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: interests.map((interest) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  interest,
+                  style: const TextStyle(
+                    color: Color(0xFF6366F1),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -571,16 +868,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
               color: const Color(0xFF6366F1).withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              LucideIcons.bookmark,
-              size: 48,
-              color: Color(0xFF6366F1),
-            ),
+            child: Icon(icon, size: 48, color: const Color(0xFF6366F1)),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'No saved items yet',
-            style: TextStyle(
+          Text(
+            title,
+            style: const TextStyle(
               color: Color(0xFF111827),
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -588,11 +881,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> with SingleTicker
           ),
           const SizedBox(height: 8),
           Text(
-            'Save activities and posts to view them here',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
+            subtitle,
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
         ],
       ),

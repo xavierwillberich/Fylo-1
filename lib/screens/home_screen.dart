@@ -39,6 +39,46 @@ class _HomeScreenState extends State<HomeScreen> {
   // P0-2 修复：使用 AuthService 单例获取当前用户 ID
   String? get _currentUserId => AuthService.instance.currentUserId;
 
+  // P0-1: 用户信息 getters
+  String get _userName {
+    final user = AuthService.instance.currentUser;
+    if (user == null) return 'User';
+    return user.displayName ?? user.email?.split('@').first ?? 'User';
+  }
+
+  String get _userInitial {
+    final name = _userName;
+    return name.isNotEmpty ? name[0].toUpperCase() : 'U';
+  }
+
+  String? get _userPhotoUrl => AuthService.instance.currentUser?.photoURL;
+
+  // P0-1: 构建用户头像
+  Widget _buildUserAvatar() {
+    final photoUrl = _userPhotoUrl;
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 22,
+        backgroundImage: NetworkImage(photoUrl),
+        onBackgroundImageError: (_, __) {},
+        child: null,
+      );
+    }
+    // 无头像时显示首字母
+    return CircleAvatar(
+      radius: 22,
+      backgroundColor: const Color(0xFF6366F1),
+      child: Text(
+        _userInitial,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
   /// 任务1：真实登出逻辑
   Future<void> _handleSignOut(BuildContext dialogContext) async {
     if (_isSigningOut) return;
@@ -100,18 +140,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // P0-1: 使用真实用户头像
                       Builder(
                         builder: (BuildContext ctx) {
                           return GestureDetector(
                             onTap: () {
+                              // 点击头像跳转到"我的主页"
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const UserProfileScreen(),
+                                ),
+                              );
+                            },
+                            onLongPress: () {
+                              // 长按打开抽屉菜单
                               Scaffold.of(ctx).openDrawer();
                             },
-                            child: const CircleAvatar(
-                              radius: 22,
-                              backgroundImage: NetworkImage(
-                                'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-                              ),
-                            ),
+                            child: _buildUserAvatar(),
                           );
                         },
                       ),
