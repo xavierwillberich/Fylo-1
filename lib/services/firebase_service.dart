@@ -200,6 +200,7 @@ class FirebaseService {
     });
   }
 
+  @Deprecated('Use toggleLikePostId instead - this will fail with current Firestore rules for non-authors')
   Future<void> togglePostLike(int postId, bool isLiked, int newLikeCount) async {
     await _firestore.collection('posts').doc(postId.toString()).update({
       'isLiked': isLiked,
@@ -207,10 +208,146 @@ class FirebaseService {
     });
   }
 
+  @Deprecated('Use toggleFollowUserId instead - this will fail with current Firestore rules for non-authors')
   Future<void> toggleFollowUser(int postId, bool isFollowing) async {
     await _firestore.collection('posts').doc(postId.toString()).update({
       'isFollowing': isFollowing,
     });
+  }
+
+  // ============================================
+  // Discover 功能 - 用户偏好存储（遵守 firestore.rules）
+  // ============================================
+
+  /// 获取用户关注的用户 ID 列表（实时流）
+  Stream<Set<String>> getFollowingUserIdsStream(String uid) {
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('preferences')
+        .doc('following')
+        .snapshots()
+        .map((doc) {
+      if (!doc.exists || doc.data() == null) {
+        return <String>{};
+      }
+      final data = doc.data()!;
+      final list = data['followingUserIds'] as List<dynamic>? ?? [];
+      return list.map((e) => e.toString()).toSet();
+    });
+  }
+
+  /// 获取用户点赞的帖子 ID 列表（实时流）
+  Stream<Set<String>> getLikedPostIdsStream(String uid) {
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('preferences')
+        .doc('likes')
+        .snapshots()
+        .map((doc) {
+      if (!doc.exists || doc.data() == null) {
+        return <String>{};
+      }
+      final data = doc.data()!;
+      final list = data['likedPostIds'] as List<dynamic>? ?? [];
+      return list.map((e) => e.toString()).toSet();
+    });
+  }
+
+  /// 切换关注用户（存到当前用户的偏好中，不违反 rules）
+  Future<void> toggleFollowUserId({
+    required String currentUid,
+    required String targetUserId,
+    required bool shouldFollow,
+  }) async {
+    final docRef = _firestore
+        .collection('users')
+        .doc(currentUid)
+        .collection('preferences')
+        .doc('following');
+
+    if (shouldFollow) {
+      await docRef.set({
+        'followingUserIds': FieldValue.arrayUnion([targetUserId]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } else {
+      await docRef.set({
+        'followingUserIds': FieldValue.arrayRemove([targetUserId]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+  }
+
+  /// 切换点赞帖子（存到当前用户的偏好中，不违反 rules）
+  Future<void> toggleLikePostId({
+    required String currentUid,
+    required String postId,
+    required bool shouldLike,
+  }) async {
+    final docRef = _firestore
+        .collection('users')
+        .doc(currentUid)
+        .collection('preferences')
+        .doc('likes');
+
+    if (shouldLike) {
+      await docRef.set({
+        'likedPostIds': FieldValue.arrayUnion([postId]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } else {
+      await docRef.set({
+        'likedPostIds': FieldValue.arrayRemove([postId]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+  }
+
+  /// 获取 Worldwide 帖子流（按创建时间倒序）
+  /// 优化：使用 createdAt（Firestore Timestamp）排序，支持分页
+  Stream<List<Post>> getWorldwidePostsStream({int limit = 30}) {
+    return _firestore
+        .collection('posts')
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        if (!data.containsKey('id')) {
+          data['id'] = int.tryParse(doc.id) ?? 0;
+        }
+        return Post.fromJson(data);
+      }).toList();
+    });
+  }
+
+  /// 获取最近帖子（Future 版本，用于搜索）
+  Future<List<Post>> getRecentPosts({int limit = 100}) async {
+    final snapshot = await _firestore
+        .collection('posts')
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .get();
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      if (!data.containsKey('id')) {
+        data['id'] = int.tryParse(doc.id) ?? 0;
+      }
+      return Post.fromJson(data);
+    }).toList();
+  }
+
+  /// 获取最近活动（限制数量，用于搜索）
+  Future<List<Event>> getRecentEvents({int limit = 200}) async {
+    final snapshot = await _firestore
+        .collection('events')
+        .orderBy('id', descending: true)
+        .limit(limit)
+        .get();
+    return snapshot.docs.map((doc) => Event.fromJson(doc.data())).toList();
   }
 
   Future<void> addUser(User user) async {
@@ -339,35 +476,45 @@ class FirebaseService {
     return null;
   }
 
+  /// 获取用户的会话列表
+  /// 注意：为避免需要 Firestore 复合索引，将 isActive 过滤移至客户端
   Stream<List<Conversation>> getUserConversationsStream(String userId) {
     return _firestore
         .collection('conversations')
         .where('participantIds', arrayContains: userId)
-        .where('isActive', isEqualTo: true)
         .orderBy('updatedAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
-        return Conversation.fromJson(data);
-      }).toList();
+      return snapshot.docs
+          .map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return Conversation.fromJson(data);
+          })
+          // 在客户端过滤 isActive，避免复合索引
+          .where((conv) => conv.isActive)
+          .toList();
     });
   }
 
+  /// 获取用户的会话列表（Future 版本）
+  /// 注意：为避免需要 Firestore 复合索引，将 isActive 过滤移至客户端
   Future<List<Conversation>> getUserConversations(String userId) async {
     final snapshot = await _firestore
         .collection('conversations')
         .where('participantIds', arrayContains: userId)
-        .where('isActive', isEqualTo: true)
         .orderBy('updatedAt', descending: true)
         .get();
     
-    return snapshot.docs.map((doc) {
-      final data = doc.data();
-      data['id'] = doc.id;
-      return Conversation.fromJson(data);
-    }).toList();
+    return snapshot.docs
+        .map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
+          return Conversation.fromJson(data);
+        })
+        // 在客户端过滤 isActive，避免复合索引
+        .where((conv) => conv.isActive)
+        .toList();
   }
 
   Future<void> addParticipantToConversation(String conversationId, String userId) async {

@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 /// 应用异常类型枚举
@@ -87,6 +86,14 @@ class AppException implements Exception {
       case AppExceptionType.unknown:
         return '出错了';
     }
+  }
+
+  /// 用户友好的完整消息（用于 SnackBar 等）
+  String get userMessage => message;
+
+  /// 从任意错误快速获取用户友好消息
+  static AppException fromError(dynamic error, [StackTrace? stackTrace]) {
+    return AppException.from(error, stackTrace);
   }
 
   @override

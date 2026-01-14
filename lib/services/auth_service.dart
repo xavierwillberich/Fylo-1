@@ -19,7 +19,9 @@ class AuthService {
   // 依赖
   // ============================================
   final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  // 延迟初始化 GoogleSignIn，避免 Web 平台在没有 client ID 时立即崩溃
+  GoogleSignIn? _googleSignIn;
+  GoogleSignIn get googleSignIn => _googleSignIn ??= GoogleSignIn();
   final FirebaseService _firebaseService = FirebaseService();
 
   // ============================================
@@ -53,7 +55,7 @@ class AuthService {
   /// Google 登录
   Future<firebase_auth.UserCredential?> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       
       if (googleUser == null) {
         return null;
@@ -185,14 +187,14 @@ class AuthService {
       // Step 2: 登出 Firebase Auth 和第三方登录
       await Future.wait([
         _auth.signOut(),
-        _googleSignIn.signOut(),
+        if (_googleSignIn != null) googleSignIn.signOut(),
       ]);
       
     } catch (e) {
       // 即使更新状态失败，也要尝试登出
       try {
         await _auth.signOut();
-        await _googleSignIn.signOut();
+        if (_googleSignIn != null) await googleSignIn.signOut();
       } catch (_) {}
       
       throw Exception('Sign out failed: $e');
