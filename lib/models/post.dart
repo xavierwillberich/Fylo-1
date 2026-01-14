@@ -1,5 +1,8 @@
+/// Post 模型
+/// Bug 2 修复：添加顶层 userId 字段以符合 Firestore rules 要求
 class Post {
   final int id;
+  final String userId; // Bug 2 修复：顶层 userId 字段（与 Firebase Auth uid 对应）
   final PostUser user;
   final PostContent content;
   final String timestamp;
@@ -12,6 +15,7 @@ class Post {
 
   Post({
     required this.id,
+    required this.userId,
     required this.user,
     required this.content,
     required this.timestamp,
@@ -26,6 +30,7 @@ class Post {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'userId': userId, // Bug 2 修复：序列化 userId
       'user': user.toJson(),
       'content': content.toJson(),
       'timestamp': timestamp,
@@ -41,6 +46,7 @@ class Post {
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
       id: json['id'] as int,
+      userId: json['userId'] as String? ?? '', // Bug 2 修复：反序列化 userId，兼容旧数据
       user: PostUser.fromJson(json['user'] as Map<String, dynamic>),
       content: PostContent.fromJson(json['content'] as Map<String, dynamic>),
       timestamp: json['timestamp'] as String,

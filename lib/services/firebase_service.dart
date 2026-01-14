@@ -108,12 +108,38 @@ class FirebaseService {
     return null;
   }
 
-  Stream<List<AppNotification>> getNotificationsStream() {
-    return _firestore.collection('notifications').snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => AppNotification.fromJson(doc.data())).toList();
-    });
+  /// Bug 4 修复：按 receiverId 过滤通知，符合 Firestore rules 要求
+  /// 现在需要传入 userId 参数
+  Stream<List<AppNotification>> getNotificationsStream(String userId) {
+    return _firestore
+        .collection('notifications')
+        .where('receiverId', isEqualTo: userId)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = int.tryParse(doc.id) ?? 0;
+            return AppNotification.fromJson(data);
+          }).toList();
+        });
   }
 
+  /// Bug 4 修复：按 receiverId 过滤通知
+  Future<List<AppNotification>> getNotificationsForUser(String userId) async {
+    final snapshot = await _firestore
+        .collection('notifications')
+        .where('receiverId', isEqualTo: userId)
+        .orderBy('timestamp', descending: true)
+        .get();
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      data['id'] = int.tryParse(doc.id) ?? 0;
+      return AppNotification.fromJson(data);
+    }).toList();
+  }
+
+  @Deprecated('Use getNotificationsForUser(userId) instead - this will fail with current Firestore rules')
   Future<List<AppNotification>> getAllNotifications() async {
     final snapshot = await _firestore.collection('notifications').get();
     return snapshot.docs.map((doc) => AppNotification.fromJson(doc.data())).toList();

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../models/notification.dart';
 import '../services/firebase_service.dart';
+import '../services/auth_service.dart';
+import '../core/widgets/app_error_view.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -12,6 +14,9 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
   final FirebaseService _firebaseService = FirebaseService();
+  
+  // Bug 4 修复：获取当前用户 ID
+  String? get _currentUserId => AuthService.instance.currentUserId;
 
   IconData _getIconForType(NotificationType type) {
     switch (type) {
@@ -96,34 +101,52 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ],
               ),
             ),
-            Expanded(
-              child: StreamBuilder<List<AppNotification>>(
-                stream: _firebaseService.getNotificationsStream(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                // Bug 4 修复：未登录时显示提示
+                final userId = _currentUserId;
+                if (userId == null) {
+                  return const Center(
+                    child: Text(
+                      '请先登录查看通知',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  );
+                }
+                
+                return StreamBuilder<List<AppNotification>>(
+                  // Bug 4 修复：传入 userId 参数
+                  stream: _firebaseService.getNotificationsStream(userId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
+                    if (snapshot.hasError) {
+                      // P1-2: 使用统一错误视图
+                      return AppErrorView.fromError(
+                        snapshot.error,
+                        onRetry: () => setState(() {}),
+                      );
+                    }
 
-                  final notifications = snapshot.data ?? [];
+                    final notifications = snapshot.data ?? [];
                   final unreadCount = notifications.where((n) => !n.isRead).length;
 
-                  return Column(
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
-                            width: 2,
+                    return Column(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.2),
+                              width: 2,
+                            ),
                           ),
-                        ),
                         child: Row(
                           children: [
                             Expanded(
@@ -367,16 +390,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     ),
                                   );
                                 },
-                              ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+                                ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

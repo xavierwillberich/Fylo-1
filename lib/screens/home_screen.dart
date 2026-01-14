@@ -5,6 +5,7 @@ import '../services/firebase_service.dart';
 import '../services/auth_service.dart';
 import '../widgets/event_card.dart';
 import '../widgets/gradient_header.dart';
+import '../core/widgets/app_error_view.dart';
 import 'search_screen.dart';
 import 'create_activity_screen.dart';
 import 'activity_detail_screen.dart';
@@ -144,17 +145,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
 
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  // P1-2: 使用统一错误视图
+                  return AppErrorView.fromError(
+                    snapshot.error,
+                    onRetry: () => setState(() {}),
+                  );
                 }
 
                 final allEvents = snapshot.data ?? [];
-                final userEvents = allEvents
-                    .where(
-                      (event) =>
-                          event.creatorId == _currentUserId ||
-                          event.participantIds.contains(_currentUserId),
-                    )
-                    .toList();
+                final userId = _currentUserId;
+                // Bug 1 修复：null 检查，未登录时不过滤用户活动
+                final userEvents = userId != null
+                    ? allEvents
+                          .where(
+                            (event) =>
+                                event.creatorId == userId ||
+                                event.participantIds.contains(userId),
+                          )
+                          .toList()
+                    : <Event>[];
                 final groupedUserEvents = _groupEvents(userEvents);
                 final groupedAllEvents = _groupEvents(allEvents);
 

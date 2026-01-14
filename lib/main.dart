@@ -1,15 +1,14 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/pool_screen.dart';
 import 'screens/messages_screen.dart';
 import 'screens/login_screen.dart';
 import 'firebase_options.dart';
-import 'services/auth_service.dart';
+import 'core/providers/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,18 +21,22 @@ class FyloApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Fylo',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF9333EA),
-          primary: const Color(0xFF9333EA),
+    // P1-3: 使用 Provider 管理全局状态
+    return ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
+      child: MaterialApp(
+        title: 'Fylo',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF9333EA),
+            primary: const Color(0xFF9333EA),
+          ),
+          textTheme: GoogleFonts.interTextTheme(),
+          useMaterial3: true,
         ),
-        textTheme: GoogleFonts.interTextTheme(),
-        useMaterial3: true,
+        home: const AuthWrapper(),
       ),
-      home: const AuthWrapper(),
     );
   }
 }
@@ -133,96 +136,33 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-/// P0-4 修复：AuthWrapper 支持 4 种状态
-/// - loading: 等待认证状态
-/// - error: 认证服务异常
-/// - authenticated: 已登录
-/// - unauthenticated: 未登录
-class AuthWrapper extends StatefulWidget {
+/// P0-4 & P1-3 改造：AuthWrapper 使用 Provider 管理状态
+/// 支持 4 种状态: loading / error / authenticated / unauthenticated
+class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
   @override
-  State<AuthWrapper> createState() => _AuthWrapperState();
-}
-
-class _AuthWrapperState extends State<AuthWrapper> {
-  // 使用单例
-  final _authService = AuthService.instance;
-
-  // 超时计时器
-  Timer? _timeoutTimer;
-  bool _isTimeout = false;
-
-  // 超时时间（秒）
-  static const int _timeoutSeconds = 5;
-
-  @override
-  void initState() {
-    super.initState();
-    _startTimeoutTimer();
-  }
-
-  void _startTimeoutTimer() {
-    _timeoutTimer?.cancel();
-    _isTimeout = false;
-    _timeoutTimer = Timer(const Duration(seconds: _timeoutSeconds), () {
-      if (mounted) {
-        setState(() => _isTimeout = true);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timeoutTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: _authService.authStateChanges,
-      builder: (context, snapshot) {
-        // ========== 状态 1: Loading ==========
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          // 超时后显示重试选项
-          if (_isTimeout) {
+    // P1-3: 使用 Provider 获取认证状态
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        switch (authProvider.status) {
+          case AuthStatus.loading:
+            return _buildLoadingScreen();
+
+          case AuthStatus.error:
             return _buildErrorScreen(
-              title: '连接超时',
-              message: '无法连接到服务器，请检查网络后重试',
-              onRetry: () {
-                setState(() {
-                  _startTimeoutTimer();
-                });
-              },
+              title: '出错了',
+              message: authProvider.errorMessage ?? '认证服务异常，请稍后重试',
+              onRetry: () => authProvider.retry(),
             );
-          }
-          return _buildLoadingScreen();
-        }
 
-        // ========== 状态 2: Error ==========
-        if (snapshot.hasError) {
-          return _buildErrorScreen(
-            title: '出错了',
-            message: '认证服务异常，请稍后重试',
-            onRetry: () {
-              setState(() {
-                _startTimeoutTimer();
-              });
-            },
-          );
-        }
+          case AuthStatus.authenticated:
+            return const MainScreen();
 
-        // ========== 状态 3: Authenticated ==========
-        if (snapshot.hasData && snapshot.data != null) {
-          // 取消超时计时器
-          _timeoutTimer?.cancel();
-          return const MainScreen();
+          case AuthStatus.unauthenticated:
+            return const LoginScreen();
         }
-
-        // ========== 状态 4: Unauthenticated ==========
-        _timeoutTimer?.cancel();
-        return const LoginScreen();
       },
     );
   }
@@ -283,7 +223,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[600]),
+                style: const TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 24),
               ElevatedButton(

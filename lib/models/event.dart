@@ -56,6 +56,61 @@ class Event {
     return '$categoryPrefix-${id.toString().padLeft(6, '0')}';
   }
 
+  /// 创建一个修改后的副本
+  Event copyWith({
+    int? id,
+    String? date,
+    String? month,
+    String? year,
+    String? dayOfWeek,
+    Weather? weather,
+    int? temperature,
+    String? category,
+    String? title,
+    String? description,
+    String? time,
+    String? location,
+    int? participants,
+    int? budget,
+    bool? recruiting,
+    ProficiencyLevel? proficiency,
+    GenderRestriction? genderRestriction,
+    bool? passwordRequired,
+    String? password,
+    List<String>? images,
+    List<String>? attendeeAvatars,
+    bool? isUserParticipating,
+    String? creatorId,
+    List<String>? participantIds,
+  }) {
+    return Event(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      month: month ?? this.month,
+      year: year ?? this.year,
+      dayOfWeek: dayOfWeek ?? this.dayOfWeek,
+      weather: weather ?? this.weather,
+      temperature: temperature ?? this.temperature,
+      category: category ?? this.category,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      time: time ?? this.time,
+      location: location ?? this.location,
+      participants: participants ?? this.participants,
+      budget: budget ?? this.budget,
+      recruiting: recruiting ?? this.recruiting,
+      proficiency: proficiency ?? this.proficiency,
+      genderRestriction: genderRestriction ?? this.genderRestriction,
+      passwordRequired: passwordRequired ?? this.passwordRequired,
+      password: password ?? this.password,
+      images: images ?? this.images,
+      attendeeAvatars: attendeeAvatars ?? this.attendeeAvatars,
+      isUserParticipating: isUserParticipating ?? this.isUserParticipating,
+      creatorId: creatorId ?? this.creatorId,
+      participantIds: participantIds ?? this.participantIds,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

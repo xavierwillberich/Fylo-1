@@ -43,6 +43,19 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
   }
 
   void _initializeChat() {
+    // P1-1: 检查 API Key 配置
+    if (!ApiConfig.isConfigured) {
+      _messages.add(
+        Message(
+          text: '⚠️ AI 助手未配置。请联系管理员设置 API Key。',
+          isUser: false,
+          timestamp: DateTime.now(),
+        ),
+      );
+      setState(() {});
+      return;
+    }
+
     _model = GenerativeModel(
       model: ApiConfig.geminiModel,
       apiKey: ApiConfig.googleApiKey,

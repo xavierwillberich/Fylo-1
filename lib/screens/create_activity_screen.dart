@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import '../models/event.dart';
 import '../services/firebase_service.dart';
-import '../services/auth_service.dart';
+import '../core/providers/auth_provider.dart';
 
 class CreateActivityScreen extends StatefulWidget {
   const CreateActivityScreen({super.key});
@@ -26,8 +27,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   String _price = '免费';
   String? _selectedCoverImage;
 
-  // P0-2 修复：使用 AuthService 单例获取当前用户 ID
-  String get _currentUserId => AuthService.instance.requireCurrentUserId;
+  // P1-3 改造：从 Provider 获取当前用户 ID
+  String get _currentUserId => context.read<AuthProvider>().requireUserId;
 
   @override
   void dispose() {
