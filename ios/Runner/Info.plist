@@ -45,5 +45,37 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<!-- Permission Handler: 权限说明（必须配置，否则权限请求不会弹窗） -->
+	
+	<!-- 位置权限 -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Fylo needs your location to find activities and friends nearby.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Fylo needs your location to find activities and friends nearby, even when the app is in the background.</string>
+	
+	<!-- 相机权限 -->
+	<key>NSCameraUsageDescription</key>
+	<string>Fylo needs camera access to take photos for your profile and activities.</string>
+	
+	<!-- 照片库权限 -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Fylo needs access to your photos to share images in activities and chats.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Fylo needs permission to save photos to your library.</string>
+	
+	<!-- 麦克风权限 -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Fylo needs microphone access to record voice messages.</string>
+	
+	<!-- 通讯录权限 -->
+	<key>NSContactsUsageDescription</key>
+	<string>Fylo needs access to your contacts to help you find friends who are already on Fylo.</string>
+	
+	<!-- 日历权限 -->
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Fylo needs calendar access to add activities to your calendar.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>Fylo needs calendar access to add activities to your calendar.</string>
 </dict>
 </plist>

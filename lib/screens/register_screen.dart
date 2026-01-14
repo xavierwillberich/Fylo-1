@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform, kIsWeb;
 import 'package:lucide_icons/lucide_icons.dart';
 import '../services/auth_service.dart';
-import 'dart:io' show Platform;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -412,7 +412,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 
                 const SizedBox(height: 12),
                 
-                if (Platform.isIOS || Platform.isMacOS)
+                // Apple Sign-In 仅在 iOS/macOS 上显示（Web 不支持）
+                if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS))
                   OutlinedButton.icon(
                     onPressed: _isLoading ? null : _signInWithApple,
                     style: OutlinedButton.styleFrom(

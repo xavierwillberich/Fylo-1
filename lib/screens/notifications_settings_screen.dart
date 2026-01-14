@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart';
+import '../core/widgets/app_error_view.dart';
 
 class NotificationsSettingsScreen extends StatefulWidget {
   const NotificationsSettingsScreen({super.key});
@@ -11,6 +14,8 @@ class NotificationsSettingsScreen extends StatefulWidget {
 
 class _NotificationsSettingsScreenState
     extends State<NotificationsSettingsScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   bool _pushNotifications = true;
   bool _emailNotifications = true;
   bool _smsNotifications = false;
@@ -31,26 +36,132 @@ class _NotificationsSettingsScreenState
   bool _monthlyReport = false;
   bool _tipsAndTricks = true;
 
+  bool _isLoading = true;
+  String? _error;
+
+  String? get _currentUserId => AuthService.instance.currentUserId;
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF1F2937)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Notifications',
-          style: TextStyle(
-            color: Color(0xFF1F2937),
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      setState(() {
+        _isLoading = false;
+        _error = '请先登录';
+      });
+      return;
+    }
+
+    try {
+      final doc = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('preferences')
+          .doc('notifications')
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data()!;
+        setState(() {
+          _pushNotifications = data['pushNotifications'] ?? true;
+          _emailNotifications = data['emailNotifications'] ?? true;
+          _smsNotifications = data['smsNotifications'] ?? false;
+          _activityInvites = data['activityInvites'] ?? true;
+          _activityUpdates = data['activityUpdates'] ?? true;
+          _activityCancellations = data['activityCancellations'] ?? true;
+          _newMessages = data['newMessages'] ?? true;
+          _messageReplies = data['messageReplies'] ?? true;
+          _groupMessages = data['groupMessages'] ?? true;
+          _newFollowers = data['newFollowers'] ?? true;
+          _friendRequests = data['friendRequests'] ?? true;
+          _mentions = data['mentions'] ?? true;
+          _weeklyDigest = data['weeklyDigest'] ?? true;
+          _monthlyReport = data['monthlyReport'] ?? false;
+          _tipsAndTricks = data['tipsAndTricks'] ?? true;
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _error = e.toString();
+      });
+    }
+  }
+
+  Future<void> _savePreference(String key, bool value) async {
+    final userId = _currentUserId;
+    if (userId == null) return;
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('preferences')
+          .doc('notifications')
+          .set({key: value}, SetOptions(merge: true));
+    } catch (e) {
+      _showSnackBar('保存失败: $e');
+    }
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF1F2937)),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: const Text(
+        'Notifications',
+        style: TextStyle(
+          color: Color(0xFF1F2937),
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF9FAFB),
+        appBar: _buildAppBar(),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF9FAFB),
+        appBar: _buildAppBar(),
+        body: AppErrorView(
+          title: '加载失败',
+          message: _error!,
+          onRetry: () {
+            setState(() {
+              _isLoading = true;
+              _error = null;
+            });
+            _loadPreferences();
+          },
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
+      appBar: _buildAppBar(),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -66,6 +177,7 @@ class _NotificationsSettingsScreenState
                 value: _pushNotifications,
                 onChanged: (value) {
                   setState(() => _pushNotifications = value);
+                  _savePreference('pushNotifications', value);
                   _showSnackBar(
                     'Push notifications ${value ? "enabled" : "disabled"}',
                   );
@@ -81,6 +193,7 @@ class _NotificationsSettingsScreenState
                 value: _emailNotifications,
                 onChanged: (value) {
                   setState(() => _emailNotifications = value);
+                  _savePreference('emailNotifications', value);
                   _showSnackBar(
                     'Email notifications ${value ? "enabled" : "disabled"}',
                   );
@@ -96,6 +209,7 @@ class _NotificationsSettingsScreenState
                 value: _smsNotifications,
                 onChanged: (value) {
                   setState(() => _smsNotifications = value);
+                  _savePreference('smsNotifications', value);
                   _showSnackBar(
                     'SMS notifications ${value ? "enabled" : "disabled"}',
                   );
@@ -114,7 +228,10 @@ class _NotificationsSettingsScreenState
                 title: 'Activity Invites',
                 subtitle: 'When someone invites you to an activity',
                 value: _activityInvites,
-                onChanged: (value) => setState(() => _activityInvites = value),
+                onChanged: (value) {
+                  setState(() => _activityInvites = value);
+                  _savePreference('activityInvites', value);
+                },
               ),
               const Divider(height: 1),
               _buildSwitchTile(
@@ -124,7 +241,10 @@ class _NotificationsSettingsScreenState
                 title: 'Activity Updates',
                 subtitle: 'Changes to activities you\'re attending',
                 value: _activityUpdates,
-                onChanged: (value) => setState(() => _activityUpdates = value),
+                onChanged: (value) {
+                  setState(() => _activityUpdates = value);
+                  _savePreference('activityUpdates', value);
+                },
               ),
               const Divider(height: 1),
               _buildSwitchTile(
@@ -134,8 +254,10 @@ class _NotificationsSettingsScreenState
                 title: 'Activity Cancellations',
                 subtitle: 'When an activity is cancelled',
                 value: _activityCancellations,
-                onChanged: (value) =>
-                    setState(() => _activityCancellations = value),
+                onChanged: (value) {
+                  setState(() => _activityCancellations = value);
+                  _savePreference('activityCancellations', value);
+                },
               ),
             ],
           ),
@@ -150,7 +272,10 @@ class _NotificationsSettingsScreenState
                 title: 'New Messages',
                 subtitle: 'When you receive a new message',
                 value: _newMessages,
-                onChanged: (value) => setState(() => _newMessages = value),
+                onChanged: (value) {
+                  setState(() => _newMessages = value);
+                  _savePreference('newMessages', value);
+                },
               ),
               const Divider(height: 1),
               _buildSwitchTile(
@@ -160,7 +285,10 @@ class _NotificationsSettingsScreenState
                 title: 'Message Replies',
                 subtitle: 'When someone replies to your message',
                 value: _messageReplies,
-                onChanged: (value) => setState(() => _messageReplies = value),
+                onChanged: (value) {
+                  setState(() => _messageReplies = value);
+                  _savePreference('messageReplies', value);
+                },
               ),
               const Divider(height: 1),
               _buildSwitchTile(
@@ -170,7 +298,10 @@ class _NotificationsSettingsScreenState
                 title: 'Group Messages',
                 subtitle: 'Messages in group chats',
                 value: _groupMessages,
-                onChanged: (value) => setState(() => _groupMessages = value),
+                onChanged: (value) {
+                  setState(() => _groupMessages = value);
+                  _savePreference('groupMessages', value);
+                },
               ),
             ],
           ),
@@ -185,7 +316,10 @@ class _NotificationsSettingsScreenState
                 title: 'New Followers',
                 subtitle: 'When someone follows you',
                 value: _newFollowers,
-                onChanged: (value) => setState(() => _newFollowers = value),
+                onChanged: (value) {
+                  setState(() => _newFollowers = value);
+                  _savePreference('newFollowers', value);
+                },
               ),
               const Divider(height: 1),
               _buildSwitchTile(
@@ -195,7 +329,10 @@ class _NotificationsSettingsScreenState
                 title: 'Friend Requests',
                 subtitle: 'When someone sends you a friend request',
                 value: _friendRequests,
-                onChanged: (value) => setState(() => _friendRequests = value),
+                onChanged: (value) {
+                  setState(() => _friendRequests = value);
+                  _savePreference('friendRequests', value);
+                },
               ),
               const Divider(height: 1),
               _buildSwitchTile(
@@ -205,7 +342,10 @@ class _NotificationsSettingsScreenState
                 title: 'Mentions',
                 subtitle: 'When someone mentions you',
                 value: _mentions,
-                onChanged: (value) => setState(() => _mentions = value),
+                onChanged: (value) {
+                  setState(() => _mentions = value);
+                  _savePreference('mentions', value);
+                },
               ),
             ],
           ),
@@ -220,7 +360,10 @@ class _NotificationsSettingsScreenState
                 title: 'Weekly Digest',
                 subtitle: 'Summary of your weekly activities',
                 value: _weeklyDigest,
-                onChanged: (value) => setState(() => _weeklyDigest = value),
+                onChanged: (value) {
+                  setState(() => _weeklyDigest = value);
+                  _savePreference('weeklyDigest', value);
+                },
               ),
               const Divider(height: 1),
               _buildSwitchTile(
@@ -230,7 +373,10 @@ class _NotificationsSettingsScreenState
                 title: 'Monthly Report',
                 subtitle: 'Your monthly activity statistics',
                 value: _monthlyReport,
-                onChanged: (value) => setState(() => _monthlyReport = value),
+                onChanged: (value) {
+                  setState(() => _monthlyReport = value);
+                  _savePreference('monthlyReport', value);
+                },
               ),
               const Divider(height: 1),
               _buildSwitchTile(
@@ -240,7 +386,10 @@ class _NotificationsSettingsScreenState
                 title: 'Tips & Tricks',
                 subtitle: 'Get the most out of Fylo',
                 value: _tipsAndTricks,
-                onChanged: (value) => setState(() => _tipsAndTricks = value),
+                onChanged: (value) {
+                  setState(() => _tipsAndTricks = value);
+                  _savePreference('tipsAndTricks', value);
+                },
               ),
             ],
           ),

@@ -9,7 +9,7 @@ import '../core/widgets/app_error_view.dart';
 import 'search_screen.dart';
 import 'create_activity_screen.dart';
 import 'activity_detail_screen.dart';
-import 'settings_screen.dart';
+// import 'settings_screen.dart'; // 事项4: 清理 - 未使用
 import 'support_screens.dart';
 import 'user_profile_screen.dart';
 import 'edit_profile_screen.dart' as edit_profile;
@@ -34,9 +34,42 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedLocation = '附近';
   final FirebaseService _firebaseService = FirebaseService();
+  bool _isSigningOut = false;
 
   // P0-2 修复：使用 AuthService 单例获取当前用户 ID
   String? get _currentUserId => AuthService.instance.currentUserId;
+
+  /// 任务1：真实登出逻辑
+  Future<void> _handleSignOut(BuildContext dialogContext) async {
+    if (_isSigningOut) return;
+
+    // 先关闭对话框和 Drawer
+    Navigator.pop(dialogContext);
+    Navigator.pop(context);
+
+    setState(() => _isSigningOut = true);
+
+    try {
+      await AuthService.instance.signOut();
+      // 登出成功后，AuthProvider/AuthWrapper 会自动切换到 unauthenticated 状态
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '登出失败: ${e.toString().replaceAll('Exception: ', '')}',
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSigningOut = false);
+      }
+    }
+  }
 
   Map<String, List<Event>> _groupEvents(List<Event> events) {
     final Map<String, List<Event>> grouped = {};
@@ -611,41 +644,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeaderButton(
-    IconData icon,
-    VoidCallback onTap, {
-    bool hasNotification = false,
-  }) {
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(25),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
-          ),
-          child: IconButton(
-            icon: Icon(icon, color: Colors.white),
-            onPressed: onTap,
-          ),
-        ),
-        if (hasNotification)
-          Positioned(
-            right: 8,
-            top: 8,
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
+  // 事项4: 清理 - _buildHeaderButton 已移除（未使用）
 
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
@@ -1052,16 +1051,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: const Text('Cancel'),
                                   ),
                                   TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      _showFeatureMessage(context, 'Sign Out');
-                                    },
-                                    child: const Text(
-                                      'Sign Out',
-                                      style: TextStyle(
-                                        color: Color(0xFFEF4444),
-                                      ),
-                                    ),
+                                    onPressed: _isSigningOut
+                                        ? null
+                                        : () => _handleSignOut(context),
+                                    child: _isSigningOut
+                                        ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Color(0xFFEF4444),
+                                            ),
+                                          )
+                                        : const Text(
+                                            'Sign Out',
+                                            style: TextStyle(
+                                              color: Color(0xFFEF4444),
+                                            ),
+                                          ),
                                   ),
                                 ],
                               ),
@@ -1139,13 +1146,5 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showFeatureMessage(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature feature coming soon'),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
+  // 事项4: 清理 - _showFeatureMessage 已移除（Sign Out 已接入真实登出逻辑）
 }

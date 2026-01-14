@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'chat_detail_screen.dart';
 import '../models/notification.dart';
+import '../models/conversation.dart';
 import 'notifications_screen.dart';
 import 'add_contact_screen.dart';
 import 'contact_selection_screen.dart';
+import '../services/firebase_service.dart';
+import '../services/auth_service.dart';
+import '../core/widgets/app_error_view.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -23,6 +27,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
   final GlobalKey _notificationsKey = GlobalKey();
   final GlobalKey _groupChatsKey = GlobalKey();
   final GlobalKey _directMessagesKey = GlobalKey();
+
+  // 任务2：Firestore 服务
+  final FirebaseService _firebaseService = FirebaseService();
+  String? get _currentUserId => AuthService.instance.currentUserId;
 
   @override
   void dispose() {
@@ -358,69 +366,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
   }
 
-  Widget _buildDialogOption({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Gradient gradient,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border.all(color: const Color(0xFFF3F4F6), width: 1),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: gradient,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: Colors.white, size: 24),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF111827),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                LucideIcons.chevronRight,
-                color: Color(0xFF9CA3AF),
-                size: 20,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // 事项4: 清理 - _buildDialogOption 已移除（未使用）
 
   @override
   Widget build(BuildContext context) {
@@ -769,70 +715,384 @@ class _MessagesScreenState extends State<MessagesScreen> {
               ],
             ),
           ),
-          Expanded(
-            child: ListView(
-              controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-              children: [
-                Container(
-                  key: _notificationsKey,
-                  child: _buildSectionHeader(
-                    'NOTIFICATIONS',
-                    isNotificationsCollapsed,
-                    () {
-                      setState(() {
-                        isNotificationsCollapsed = !isNotificationsCollapsed;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (!isNotificationsCollapsed)
-                  ...filteredNotifications.map(
-                    (notification) => _buildNotificationItem(notification),
-                  ),
-                const SizedBox(height: 24),
-                Container(
-                  key: _groupChatsKey,
-                  child: _buildSectionHeader(
-                    'GROUP CHATS',
-                    isGroupChatsCollapsed,
-                    () {
-                      setState(() {
-                        isGroupChatsCollapsed = !isGroupChatsCollapsed;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (!isGroupChatsCollapsed)
-                  ...filteredGroupChats.map(
-                    (chat) => _buildGroupChatItem(chat),
-                  ),
-                const SizedBox(height: 24),
-                Container(
-                  key: _directMessagesKey,
-                  child: _buildSectionHeader(
-                    'DIRECT MESSAGES',
-                    isDirectMessagesCollapsed,
-                    () {
-                      setState(() {
-                        isDirectMessagesCollapsed = !isDirectMessagesCollapsed;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (!isDirectMessagesCollapsed)
-                  ...filteredPrivateChats.map(
-                    (chat) => _buildPrivateChatItem(chat),
-                  ),
-              ],
-            ),
-          ),
+          // 任务2：使用 StreamBuilder 获取真实会话数据
+          Expanded(child: _buildConversationsList()),
         ],
       ),
     );
+  }
+
+  /// 任务2：构建会话列表（使用 Firestore 真实数据）
+  Widget _buildConversationsList() {
+    final userId = _currentUserId;
+    if (userId == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(LucideIcons.logIn, size: 48, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            const Text(
+              '请先登录查看消息',
+              style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return StreamBuilder<List<Conversation>>(
+      stream: _firebaseService.getUserConversationsStream(userId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return AppErrorView.fromError(
+            snapshot.error,
+            onRetry: () => setState(() {}),
+          );
+        }
+
+        final conversations = snapshot.data ?? [];
+
+        // 分离群聊和私聊
+        final groupChats = conversations
+            .where(
+              (c) =>
+                  c.type == ConversationType.group ||
+                  c.type == ConversationType.activity,
+            )
+            .toList();
+        final directChats = conversations
+            .where((c) => c.type == ConversationType.direct)
+            .toList();
+
+        // 根据搜索过滤
+        final searchQuery = _searchController.text.toLowerCase();
+        final filteredGroupChats = searchQuery.isEmpty
+            ? groupChats
+            : groupChats
+                  .where((c) => c.name.toLowerCase().contains(searchQuery))
+                  .toList();
+        final filteredDirectChats = searchQuery.isEmpty
+            ? directChats
+            : directChats
+                  .where((c) => c.name.toLowerCase().contains(searchQuery))
+                  .toList();
+
+        if (conversations.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  LucideIcons.messageSquare,
+                  size: 64,
+                  color: Colors.grey[300],
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '暂无会话',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '开始一个新对话吧',
+                  style: TextStyle(fontSize: 14, color: Color(0xFF9CA3AF)),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView(
+          controller: _scrollController,
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+          children: [
+            // 通知部分（保留原有逻辑）
+            Container(
+              key: _notificationsKey,
+              child: _buildSectionHeader(
+                'NOTIFICATIONS',
+                isNotificationsCollapsed,
+                () => setState(
+                  () => isNotificationsCollapsed = !isNotificationsCollapsed,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (!isNotificationsCollapsed)
+              ...filteredNotifications.map(
+                (notification) => _buildNotificationItem(notification),
+              ),
+            const SizedBox(height: 24),
+
+            // 群聊部分（使用真实数据）
+            Container(
+              key: _groupChatsKey,
+              child: _buildSectionHeader(
+                'GROUP CHATS (${filteredGroupChats.length})',
+                isGroupChatsCollapsed,
+                () => setState(
+                  () => isGroupChatsCollapsed = !isGroupChatsCollapsed,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (!isGroupChatsCollapsed)
+              ...filteredGroupChats.map(
+                (conversation) => _buildConversationItem(conversation),
+              ),
+            const SizedBox(height: 24),
+
+            // 私聊部分（使用真实数据）
+            Container(
+              key: _directMessagesKey,
+              child: _buildSectionHeader(
+                'DIRECT MESSAGES (${filteredDirectChats.length})',
+                isDirectMessagesCollapsed,
+                () => setState(
+                  () => isDirectMessagesCollapsed = !isDirectMessagesCollapsed,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (!isDirectMessagesCollapsed)
+              ...filteredDirectChats.map(
+                (conversation) => _buildConversationItem(conversation),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// 任务2：构建会话项（使用 Conversation 模型）
+  Widget _buildConversationItem(Conversation conversation) {
+    final isUnread = conversation.unreadCount > 0;
+    final isGroup = conversation.type != ConversationType.direct;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: isUnread
+                ? const Color(0xFF0EA5E9).withOpacity(0.1)
+                : const Color(0xFF000000).withOpacity(0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatDetailScreen(
+                  chat: _conversationToLegacyMap(conversation),
+                ),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: isUnread
+                    ? const Color(0xFFBAE6FD)
+                    : const Color(0xFFF3F4F6),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Row(
+              children: [
+                // 头像
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child:
+                      conversation.avatar != null &&
+                          conversation.avatar!.isNotEmpty
+                      ? Image.network(
+                          conversation.avatar!,
+                          width: 56,
+                          height: 56,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              _buildDefaultAvatar(conversation.name, isGroup),
+                        )
+                      : _buildDefaultAvatar(conversation.name, isGroup),
+                ),
+                const SizedBox(width: 16),
+                // 内容
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              conversation.name,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: isUnread
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
+                                color: const Color(0xFF1F2937),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (isGroup)
+                            Container(
+                              margin: const EdgeInsets.only(left: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF6366F1).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${conversation.participantIds.length}人',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF6366F1),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        conversation.lastMessageContent ?? '暂无消息',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isUnread
+                              ? const Color(0xFF374151)
+                              : const Color(0xFF9CA3AF),
+                          fontWeight: isUnread
+                              ? FontWeight.w500
+                              : FontWeight.normal,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                // 时间和未读标记
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      _formatTime(conversation.lastMessageTime),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isUnread
+                            ? const Color(0xFF0EA5E9)
+                            : const Color(0xFF9CA3AF),
+                        fontWeight: isUnread
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                    ),
+                    if (isUnread)
+                      Container(
+                        margin: const EdgeInsets.only(top: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF0EA5E9), Color(0xFF22D3EE)],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${conversation.unreadCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDefaultAvatar(String name, bool isGroup) {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isGroup
+              ? [const Color(0xFF6366F1), const Color(0xFF9333EA)]
+              : [const Color(0xFF0EA5E9), const Color(0xFF22D3EE)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Center(
+        child: Text(
+          name.isNotEmpty ? name[0].toUpperCase() : '?',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatTime(DateTime? time) {
+    if (time == null) return '';
+    final now = DateTime.now();
+    final diff = now.difference(time);
+    if (diff.inMinutes < 1) return '刚刚';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}分钟前';
+    if (diff.inHours < 24) return '${diff.inHours}小时前';
+    if (diff.inDays < 7) return '${diff.inDays}天前';
+    return '${time.month}/${time.day}';
+  }
+
+  Map<String, dynamic> _conversationToLegacyMap(Conversation conversation) {
+    return {
+      'id': conversation.id,
+      'name': conversation.name,
+      'avatar': conversation.avatar ?? '',
+      'lastMessage': conversation.lastMessageContent ?? '',
+      'time': _formatTime(conversation.lastMessageTime),
+      'isUnread': conversation.unreadCount > 0,
+      'participants': conversation.participantIds.length,
+      'type': conversation.type.name,
+    };
   }
 
   Widget _buildSectionHeader(
@@ -874,370 +1134,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
   }
 
-  Widget _buildGroupChatItem(Map<String, dynamic> chat) {
-    final bool isUnread = chat['isUnread'] ?? false;
-    final int onlineCount = chat['onlineCount'] ?? 0;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: isUnread ? const Color(0xFFF0F9FF) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        elevation: 0,
-        shadowColor: Colors.black.withOpacity(0.05),
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChatDetailScreen(chat: chat),
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(24),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: isUnread
-                    ? const Color(0xFFBAE6FD)
-                    : const Color(0xFFF3F4F6),
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Row(
-              children: [
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.network(
-                        chat['avatar'],
-                        width: 56,
-                        height: 56,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF6366F1), Color(0xFF9333EA)],
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(
-                              LucideIcons.users,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          );
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                value:
-                                    loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
-                                    : null,
-                                strokeWidth: 2,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Positioned(
-                      right: -4,
-                      bottom: -4,
-                      child: Container(
-                        padding: const EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF3B82F6), Color(0xFF06B6D4)],
-                          ),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: const Icon(
-                          LucideIcons.users,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              chat['name'],
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                                color: isUnread
-                                    ? Colors.black
-                                    : const Color(0xFF111827),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            chat['time'],
-                            style: const TextStyle(
-                              color: Color(0xFF9CA3AF),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        chat['lastMessage'],
-                        style: TextStyle(
-                          color: isUnread
-                              ? const Color(0xFF374151)
-                              : const Color(0xFF6B7280),
-                          fontSize: 14,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              '${chat['participants']} participants',
-                              style: const TextStyle(
-                                color: Color(0xFF9CA3AF),
-                                fontSize: 12,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (onlineCount > 0) ...[
-                            const Text(
-                              ' • ',
-                              style: TextStyle(
-                                color: Color(0xFFD1D5DB),
-                                fontSize: 12,
-                              ),
-                            ),
-                            Text(
-                              '$onlineCount online',
-                              style: const TextStyle(
-                                color: Color(0xFF10B981),
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (isUnread)
-                  Container(
-                    margin: const EdgeInsets.only(left: 8),
-                    width: 12,
-                    height: 12,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF3B82F6), Color(0xFF9333EA)],
-                      ),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPrivateChatItem(Map<String, dynamic> chat) {
-    final bool isUnread = chat['isUnread'] ?? false;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: isUnread ? const Color(0xFFF0F9FF) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        elevation: 0,
-        shadowColor: Colors.black.withOpacity(0.05),
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChatDetailScreen(chat: chat),
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(24),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: isUnread
-                    ? const Color(0xFFBAE6FD)
-                    : const Color(0xFFF3F4F6),
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Row(
-              children: [
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.network(
-                        chat['avatar'],
-                        width: 56,
-                        height: 56,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF3B82F6), Color(0xFF06B6D4)],
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(
-                              LucideIcons.user,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          );
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                value:
-                                    loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
-                                    : null,
-                                strokeWidth: 2,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Positioned(
-                      right: -4,
-                      bottom: -4,
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF10B981),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              chat['name'],
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                                color: isUnread
-                                    ? Colors.black
-                                    : const Color(0xFF111827),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            chat['time'],
-                            style: const TextStyle(
-                              color: Color(0xFF9CA3AF),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        chat['lastMessage'],
-                        style: TextStyle(
-                          color: isUnread
-                              ? const Color(0xFF374151)
-                              : const Color(0xFF6B7280),
-                          fontSize: 14,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                if (isUnread)
-                  Container(
-                    margin: const EdgeInsets.only(left: 8),
-                    width: 12,
-                    height: 12,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF3B82F6), Color(0xFF9333EA)],
-                      ),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  // 事项4: 清理 - _buildGroupChatItem 已移除（已被 _buildConversationItem 替代）
+  // 事项4: 清理 - _buildPrivateChatItem 已移除（已被 _buildConversationItem 替代）
 
   Widget _buildNotificationItem(Map<String, dynamic> notification) {
     final bool isRead = notification['isRead'] ?? true;

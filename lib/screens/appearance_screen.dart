@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AppearanceScreen extends StatefulWidget {
   const AppearanceScreen({super.key});
@@ -9,12 +10,22 @@ class AppearanceScreen extends StatefulWidget {
 }
 
 class _AppearanceScreenState extends State<AppearanceScreen> {
+  // 持久化 keys
+  static const String _keyThemeMode = 'appearance_theme_mode';
+  static const String _keyAccentColor = 'appearance_accent_color';
+  static const String _keyFontSize = 'appearance_font_size';
+  static const String _keyCompactMode = 'appearance_compact_mode';
+  static const String _keyShowAvatars = 'appearance_show_avatars';
+  static const String _keyAnimationsEnabled = 'appearance_animations_enabled';
+
   ThemeMode _themeMode = ThemeMode.light;
   String _accentColor = 'indigo';
   double _fontSize = 16.0;
   bool _compactMode = false;
   bool _showAvatars = true;
   bool _animationsEnabled = true;
+  bool _isLoading = true;
+  bool _isSaving = false;
 
   final Map<String, Color> _accentColors = {
     'indigo': const Color(0xFF6366F1),
@@ -28,7 +39,84 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        final themeModeStr = prefs.getString(_keyThemeMode) ?? 'light';
+        _themeMode = themeModeStr == 'dark'
+            ? ThemeMode.dark
+            : themeModeStr == 'system'
+            ? ThemeMode.system
+            : ThemeMode.light;
+        _accentColor = prefs.getString(_keyAccentColor) ?? 'indigo';
+        _fontSize = prefs.getDouble(_keyFontSize) ?? 16.0;
+        _compactMode = prefs.getBool(_keyCompactMode) ?? false;
+        _showAvatars = prefs.getBool(_keyShowAvatars) ?? true;
+        _animationsEnabled = prefs.getBool(_keyAnimationsEnabled) ?? true;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showSnackBar('加载设置失败: $e');
+    }
+  }
+
+  Future<void> _savePreferences() async {
+    setState(() => _isSaving = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _keyThemeMode,
+        _themeMode == ThemeMode.dark
+            ? 'dark'
+            : _themeMode == ThemeMode.system
+            ? 'system'
+            : 'light',
+      );
+      await prefs.setString(_keyAccentColor, _accentColor);
+      await prefs.setDouble(_keyFontSize, _fontSize);
+      await prefs.setBool(_keyCompactMode, _compactMode);
+      await prefs.setBool(_keyShowAvatars, _showAvatars);
+      await prefs.setBool(_keyAnimationsEnabled, _animationsEnabled);
+      _showSnackBar('设置已保存');
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      _showSnackBar('保存失败: $e');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF9FAFB),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF1F2937)),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: const Text(
+            'Appearance',
+            style: TextStyle(
+              color: Color(0xFF1F2937),
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
@@ -240,10 +328,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
-                _showSnackBar('Appearance settings saved');
-                Navigator.pop(context);
-              },
+              onPressed: _isSaving ? null : _savePreferences,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6366F1),
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -251,14 +336,23 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Save Changes',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Save Changes',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ),
         ],

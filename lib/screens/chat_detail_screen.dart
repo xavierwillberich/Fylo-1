@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../models/message.dart';
+import '../services/firebase_service.dart';
+import '../services/auth_service.dart';
+import '../core/widgets/app_error_view.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final Map<String, dynamic> chat;
@@ -13,130 +17,11 @@ class ChatDetailScreen extends StatefulWidget {
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FirebaseService _firebaseService = FirebaseService();
 
-  List<Map<String, dynamic>> _messages = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeMessages();
-  }
-
-  void _initializeMessages() {
-    final bool isGroup = widget.chat['isGroup'] ?? false;
-
-    if (isGroup) {
-      _messages = [
-        {
-          'id': 1,
-          'type': 'sent',
-          'message': 'Everyone ready for the hike? Let\'s check in! 🏔️',
-        },
-        {'id': 2, 'type': 'checkin', 'message': 'You checked in'},
-        {
-          'id': 3,
-          'type': 'received',
-          'message': 'I\'m here! Perfect day for it',
-          'sender': 'Tom',
-          'avatar':
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-        },
-        {'id': 4, 'type': 'checkin', 'message': 'Tom Checked in'},
-        {'id': 5, 'type': 'checkin', 'message': 'Alice Chen Checked in'},
-        {'id': 6, 'type': 'checkin', 'message': 'Tom Branson Checked in'},
-        {'id': 7, 'type': 'checkin', 'message': 'Eve Smith Checked in'},
-        {'id': 8, 'type': 'checkin', 'message': 'Kush Singh Checked in'},
-        {'id': 9, 'type': 'sent', 'message': 'Still waiting for Helena?'},
-        {
-          'id': 10,
-          'type': 'sent',
-          'message': 'Should we grab water while we wait?',
-        },
-        {'id': 11, 'type': 'checkin', 'message': 'Helena Hills Checked in'},
-        {'id': 12, 'type': 'weather'},
-        {
-          'id': 13,
-          'type': 'received',
-          'message': 'Wow 35°C is intense! Everyone bring sunscreen?',
-          'sender': 'Tom',
-          'avatar':
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-        },
-        {
-          'id': 14,
-          'type': 'sent',
-          'message': 'Yeah good call on the weather alert',
-        },
-        {
-          'id': 15,
-          'type': 'sent',
-          'message': 'Just bought some water bottles for everyone',
-        },
-        {'id': 16, 'type': 'transaction'},
-        {
-          'id': 17,
-          'type': 'received',
-          'message': 'Thanks for getting the water!',
-          'sender': 'Alice',
-          'avatar':
-              'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-        },
-        {
-          'id': 18,
-          'type': 'received',
-          'message': 'We should split the costs for today',
-          'sender': 'Eve',
-          'avatar':
-              'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100',
-        },
-        {
-          'id': 19,
-          'type': 'received',
-          'message': 'I\'ll create a bill split for everything',
-          'sender': 'Tom',
-          'avatar':
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-        },
-        {'id': 20, 'type': 'billsplit'},
-        {'id': 21, 'type': 'sent', 'message': 'Perfect! Just paid my share 💸'},
-      ];
-    } else {
-      _messages = [
-        {
-          'id': 1,
-          'type': 'received',
-          'message': 'Hey! How\'s it going?',
-          'sender': widget.chat['name'],
-          'avatar': widget.chat['avatar'],
-        },
-        {
-          'id': 2,
-          'type': 'sent',
-          'message': 'Pretty good! Just got back from a hike',
-        },
-        {
-          'id': 3,
-          'type': 'received',
-          'message': 'Nice! Where did you go?',
-          'sender': widget.chat['name'],
-          'avatar': widget.chat['avatar'],
-        },
-        {
-          'id': 4,
-          'type': 'sent',
-          'message': 'George Bass coastal walk. The views were amazing!',
-        },
-        {
-          'id': 5,
-          'type': 'received',
-          'message':
-              'That sounds awesome! Maybe we can go together next time? 🏔️',
-          'sender': widget.chat['name'],
-          'avatar': widget.chat['avatar'],
-        },
-      ];
-    }
-  }
+  bool _isSending = false;
+  String? get _currentUserId => AuthService.instance.currentUserId;
+  String get _conversationId => widget.chat['id'] as String;
 
   @override
   void dispose() {
@@ -145,28 +30,71 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     super.dispose();
   }
 
-  void _sendMessage() {
+  /// 任务2：发送消息到 Firestore
+  Future<void> _sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
 
-    setState(() {
-      _messages.add({
-        'id': _messages.length + 1,
-        'type': 'sent',
-        'message': _messageController.text.trim(),
-      });
-    });
+    final userId = _currentUserId;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请先登录'), backgroundColor: Colors.red),
+      );
+      return;
+    }
 
+    if (_isSending) return;
+
+    setState(() => _isSending = true);
+
+    final messageText = _messageController.text.trim();
     _messageController.clear();
 
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+    try {
+      // 获取用户信息（从 AuthService 或使用默认值）
+      final user = AuthService.instance.currentUser;
+      final senderName = user?.displayName ?? '我';
+      final senderAvatar = user?.photoURL ?? '';
+
+      final message = ChatMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        conversationId: _conversationId,
+        senderId: userId, // 强制使用当前用户 ID
+        senderName: senderName,
+        senderAvatar: senderAvatar,
+        type: MessageType.text,
+        content: messageText,
+        timestamp: DateTime.now(),
+        status: MessageStatus.sending,
+      );
+
+      await _firebaseService.sendMessage(message);
+
+      // 滚动到底部
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '发送失败: ${e.toString().replaceAll('Exception: ', '')}',
+            ),
+            backgroundColor: Colors.red,
+          ),
         );
       }
-    });
+    } finally {
+      if (mounted) {
+        setState(() => _isSending = false);
+      }
+    }
   }
 
   @override
@@ -270,22 +198,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       ),
       body: Column(
         children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                final type = message['type'] as String;
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _buildMessage(message, type),
-                );
-              },
-            ),
-          ),
+          // 任务2：使用 StreamBuilder 获取真实消息数据
+          Expanded(child: _buildMessagesStream()),
           Container(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             decoration: BoxDecoration(
@@ -370,6 +284,247 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     );
   }
 
+  /// 任务2：构建消息流 (Firestore Stream)
+  Widget _buildMessagesStream() {
+    final userId = _currentUserId;
+    if (userId == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(LucideIcons.logIn, size: 48, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            const Text(
+              '请先登录查看消息',
+              style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return StreamBuilder<List<ChatMessage>>(
+      stream: _firebaseService.getMessagesStream(_conversationId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return AppErrorView.fromError(
+            snapshot.error,
+            onRetry: () => setState(() {}),
+          );
+        }
+
+        final messages = snapshot.data ?? [];
+
+        if (messages.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  LucideIcons.messageSquare,
+                  size: 64,
+                  color: Colors.grey[300],
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '暂无消息',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '发送第一条消息吧',
+                  style: TextStyle(fontSize: 14, color: Color(0xFF9CA3AF)),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // 按时间排序（最早的在前）
+        final sortedMessages = List<ChatMessage>.from(messages)
+          ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+        return ListView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(16),
+          itemCount: sortedMessages.length,
+          itemBuilder: (context, index) {
+            final message = sortedMessages[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _buildChatMessageItem(message, userId),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// 任务2：构建单个消息项（使用 ChatMessage 模型）
+  Widget _buildChatMessageItem(ChatMessage message, String currentUserId) {
+    final isSent = message.senderId == currentUserId;
+
+    if (isSent) {
+      return Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.75,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF6366F1), Color(0xFF9333EA)],
+            ),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(4),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                message.content,
+                style: const TextStyle(color: Colors.white, fontSize: 15),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _formatMessageTime(message.timestamp),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    message.status == MessageStatus.sent
+                        ? LucideIcons.check
+                        : message.status == MessageStatus.delivered
+                        ? LucideIcons.checkCheck
+                        : message.status == MessageStatus.read
+                        ? LucideIcons.checkCheck
+                        : LucideIcons.clock,
+                    size: 12,
+                    color: message.status == MessageStatus.read
+                        ? const Color(0xFF22D3EE)
+                        : Colors.white.withOpacity(0.7),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundImage: message.senderAvatar.isNotEmpty
+                ? NetworkImage(message.senderAvatar)
+                : null,
+            child: message.senderAvatar.isEmpty
+                ? Text(
+                    message.senderName.isNotEmpty
+                        ? message.senderName[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(width: 8),
+          Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.65,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+                bottomLeft: Radius.circular(4),
+                bottomRight: Radius.circular(20),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  message.senderName,
+                  style: const TextStyle(
+                    color: Color(0xFF6366F1),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  message.content,
+                  style: const TextStyle(
+                    color: Color(0xFF1F2937),
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _formatMessageTime(message.timestamp),
+                  style: const TextStyle(
+                    color: Color(0xFF9CA3AF),
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+  }
+
+  String _formatMessageTime(DateTime time) {
+    final now = DateTime.now();
+    final diff = now.difference(time);
+    if (diff.inMinutes < 1) return '刚刚';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}分钟前';
+    if (diff.inHours < 24)
+      return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    return '${time.month}/${time.day} ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  // =============================================================
+  // 事项4: 以下为旧版硬编码消息渲染方法（保留但未使用）
+  // 新版已使用 _buildChatMessageItem + _buildMessagesStream
+  // =============================================================
+
+  // ignore: unused_element
   Widget _buildMessage(Map<String, dynamic> message, String type) {
     switch (type) {
       case 'checkin':
