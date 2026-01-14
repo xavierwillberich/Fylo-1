@@ -98,10 +98,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                   children: [
                     const Text(
                       'Choose your accent color',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF6B7280),
-                      ),
+                      style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
                     ),
                     const SizedBox(height: 16),
                     Wrap(
@@ -114,7 +111,9 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                           isSelected: _accentColor == entry.key,
                           onTap: () {
                             setState(() => _accentColor = entry.key);
-                            _showSnackBar('${entry.key.capitalize()} accent color selected');
+                            _showSnackBar(
+                              '${entry.key.capitalize()} accent color selected',
+                            );
                           },
                         );
                       }).toList(),
@@ -169,7 +168,9 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                               setState(() => _fontSize = value);
                             },
                             onChangeEnd: (value) {
-                              _showSnackBar('Font size set to ${value.toInt()}px');
+                              _showSnackBar(
+                                'Font size set to ${value.toInt()}px',
+                              );
                             },
                           ),
                         ),
@@ -202,7 +203,9 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                 value: _compactMode,
                 onChanged: (value) {
                   setState(() => _compactMode = value);
-                  _showSnackBar('Compact mode ${value ? "enabled" : "disabled"}');
+                  _showSnackBar(
+                    'Compact mode ${value ? "enabled" : "disabled"}',
+                  );
                 },
               ),
               const Divider(height: 1),
@@ -263,7 +266,10 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     );
   }
 
-  Widget _buildSection({required String title, required List<Widget> children}) {
+  Widget _buildSection({
+    required String title,
+    required List<Widget> children,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -314,7 +320,9 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
               child: Icon(
                 icon,
                 size: 20,
-                color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF6B7280),
+                color: isSelected
+                    ? const Color(0xFF6366F1)
+                    : const Color(0xFF6B7280),
               ),
             ),
             const SizedBox(width: 16),
@@ -382,11 +390,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
               : null,
         ),
         child: isSelected
-            ? const Icon(
-                LucideIcons.check,
-                color: Colors.white,
-                size: 24,
-              )
+            ? const Icon(LucideIcons.check, color: Colors.white, size: 24)
             : null,
       ),
     );
@@ -441,7 +445,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF6366F1),
+            activeThumbColor: const Color(0xFF6366F1),
           ),
         ],
       ),
@@ -450,10 +454,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 }

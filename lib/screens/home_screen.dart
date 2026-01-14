@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../models/event.dart';
 import '../services/firebase_service.dart';
+import '../services/auth_service.dart';
 import '../widgets/event_card.dart';
 import '../widgets/gradient_header.dart';
 import 'search_screen.dart';
@@ -32,7 +33,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedLocation = '附近';
   final FirebaseService _firebaseService = FirebaseService();
-  final String _currentUserId = 'user_001';
+
+  // P0-2 修复：使用 AuthService 单例获取当前用户 ID
+  String? get _currentUserId => AuthService.instance.currentUserId;
 
   Map<String, List<Event>> _groupEvents(List<Event> events) {
     final Map<String, List<Event>> grouped = {};
@@ -60,67 +63,75 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 children: [
                   SizedBox(height: MediaQuery.of(context).padding.top + 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Builder(
-                          builder: (BuildContext ctx) {
-                            return GestureDetector(
-                              onTap: () {
-                                Scaffold.of(ctx).openDrawer();
-                              },
-                              child: const CircleAvatar(
-                                radius: 22,
-                                backgroundImage: NetworkImage(
-                                  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        Row(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: IconButton(
-                                padding: EdgeInsets.zero,
-                                icon: const Icon(LucideIcons.search, color: Colors.white, size: 20),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const SearchScreen(),
-                                    ),
-                                  );
-                                },
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Builder(
+                        builder: (BuildContext ctx) {
+                          return GestureDetector(
+                            onTap: () {
+                              Scaffold.of(ctx).openDrawer();
+                            },
+                            child: const CircleAvatar(
+                              radius: 22,
+                              backgroundImage: NetworkImage(
+                                'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
+                          );
+                        },
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(
+                                LucideIcons.search,
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
+                                size: 20,
                               ),
-                              child: IconButton(
-                                padding: EdgeInsets.zero,
-                                icon: const Icon(LucideIcons.plus, color: Color(0xFF9333EA), size: 22),
-                                onPressed: () {
-                                  _showActionMenu(context);
-                                },
-                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const SearchScreen(),
+                                  ),
+                                );
+                              },
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+                          ),
+                          const SizedBox(width: 10),
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(
+                                LucideIcons.plus,
+                                color: Color(0xFF9333EA),
+                                size: 22,
+                              ),
+                              onPressed: () {
+                                _showActionMenu(context);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -138,9 +149,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 final allEvents = snapshot.data ?? [];
                 final userEvents = allEvents
-                    .where((event) =>
-                        event.creatorId == _currentUserId ||
-                        event.participantIds.contains(_currentUserId))
+                    .where(
+                      (event) =>
+                          event.creatorId == _currentUserId ||
+                          event.participantIds.contains(_currentUserId),
+                    )
                     .toList();
                 final groupedUserEvents = _groupEvents(userEvents);
                 final groupedAllEvents = _groupEvents(allEvents);
@@ -211,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ...groupedUserEvents.entries.map((entry) {
                         final eventList = entry.value;
                         final firstEvent = eventList.first;
-                        
+
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -221,7 +234,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 text: TextSpan(
                                   children: [
                                     TextSpan(
-                                      text: '${firstEvent.date}${firstEvent.month}',
+                                      text:
+                                          '${firstEvent.date}${firstEvent.month}',
                                       style: const TextStyle(
                                         color: Colors.black,
                                         fontSize: 16,
@@ -245,26 +259,29 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               child: Column(
                                 children: eventList
-                                    .map((event) => EventCard(
-                                          event: event,
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => ActivityDetailScreen(
-                                                  event: event,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ))
+                                    .map(
+                                      (event) => EventCard(
+                                        event: event,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ActivityDetailScreen(
+                                                    event: event,
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    )
                                     .toList(),
                               ),
                             ),
                             const SizedBox(height: 24),
                           ],
                         );
-                      }).toList(),
+                      }),
                     const SizedBox(height: 32),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
@@ -308,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ...groupedAllEvents.entries.map((entry) {
                       final eventList = entry.value;
                       final firstEvent = eventList.first;
-                      
+
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -318,7 +335,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               text: TextSpan(
                                 children: [
                                   TextSpan(
-                                    text: '${firstEvent.date}${firstEvent.month}',
+                                    text:
+                                        '${firstEvent.date}${firstEvent.month}',
                                     style: const TextStyle(
                                       color: Colors.black,
                                       fontSize: 16,
@@ -342,26 +360,29 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             child: Column(
                               children: eventList
-                                  .map((event) => EventCard(
-                                        event: event,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => ActivityDetailScreen(
-                                                event: event,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ))
+                                  .map(
+                                    (event) => EventCard(
+                                      event: event,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                ActivityDetailScreen(
+                                                  event: event,
+                                                ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  )
                                   .toList(),
                             ),
                           ),
                           const SizedBox(height: 24),
                         ],
                       );
-                    }).toList(),
+                    }),
                   ],
                 );
               },
@@ -429,7 +450,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               initialChildSize: 0.92,
                               minChildSize: 0.5,
                               maxChildSize: 0.92,
-                              builder: (context, scrollController) => const CreateActivityScreen(),
+                              builder: (context, scrollController) =>
+                                  const CreateActivityScreen(),
                             ),
                           );
                         },
@@ -450,7 +472,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               initialChildSize: 0.92,
                               minChildSize: 0.5,
                               maxChildSize: 0.92,
-                              builder: (context, scrollController) => const AIAssistantScreen(),
+                              builder: (context, scrollController) =>
+                                  const AIAssistantScreen(),
                             ),
                           );
                         },
@@ -464,7 +487,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ContactSelectionScreen(),
+                              builder: (context) =>
+                                  const ContactSelectionScreen(),
                             ),
                           );
                         },
@@ -491,18 +515,11 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: const Color(0xFF1F2937),
-            ),
+            Icon(icon, size: 20, color: const Color(0xFF1F2937)),
             const SizedBox(width: 12),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Color(0xFF1F2937),
-              ),
+              style: const TextStyle(fontSize: 15, color: Color(0xFF1F2937)),
             ),
           ],
         ),
@@ -585,16 +602,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeaderButton(IconData icon, VoidCallback onTap, {bool hasNotification = false}) {
+  Widget _buildHeaderButton(
+    IconData icon,
+    VoidCallback onTap, {
+    bool hasNotification = false,
+  }) {
     return Stack(
       children: [
         Container(
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.15),
             borderRadius: BorderRadius.circular(25),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.2),
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
           ),
           child: IconButton(
             icon: Icon(icon, color: Colors.white),
@@ -623,20 +642,17 @@ class _HomeScreenState extends State<HomeScreen> {
     return Drawer(
       child: Stack(
         children: [
-          Container(
-            color: const Color(0xFFF9FAFB),
-            height: double.infinity,
-          ),
+          Container(color: const Color(0xFFF9FAFB), height: double.infinity),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                SizedBox(height: MediaQuery.of(context).padding.top + 16),
-              Container(
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: MediaQuery.of(context).padding.top + 16),
+                      Container(
                         margin: const EdgeInsets.symmetric(horizontal: 20),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -724,14 +740,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               icon: LucideIcons.user,
                               iconColor: const Color(0xFF6366F1),
-                              iconBgColor: const Color(0xFF6366F1).withOpacity(0.1),
+                              iconBgColor: const Color(
+                                0xFF6366F1,
+                              ).withOpacity(0.1),
                               title: 'Edit Profile',
                               onTap: () {
                                 Navigator.pop(context);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const edit_profile.EditProfileScreen(),
+                                    builder: (context) =>
+                                        const edit_profile.EditProfileScreen(),
                                   ),
                                 );
                               },
@@ -741,14 +760,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               icon: LucideIcons.settings,
                               iconColor: const Color(0xFF6B7280),
-                              iconBgColor: const Color(0xFF6B7280).withOpacity(0.1),
+                              iconBgColor: const Color(
+                                0xFF6B7280,
+                              ).withOpacity(0.1),
                               title: 'Account Settings',
                               onTap: () {
                                 Navigator.pop(context);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const account_settings.AccountSettingsScreen(),
+                                    builder: (context) =>
+                                        const account_settings.AccountSettingsScreen(),
                                   ),
                                 );
                               },
@@ -758,14 +780,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               icon: LucideIcons.creditCard,
                               iconColor: const Color(0xFFEC4899),
-                              iconBgColor: const Color(0xFFEC4899).withOpacity(0.1),
+                              iconBgColor: const Color(
+                                0xFFEC4899,
+                              ).withOpacity(0.1),
                               title: 'Payment',
                               onTap: () {
                                 Navigator.pop(context);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const payment.PaymentScreen(),
+                                    builder: (context) =>
+                                        const payment.PaymentScreen(),
                                   ),
                                 );
                               },
@@ -798,14 +823,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               icon: LucideIcons.bell,
                               iconColor: const Color(0xFFEF4444),
-                              iconBgColor: const Color(0xFFEF4444).withOpacity(0.1),
+                              iconBgColor: const Color(
+                                0xFFEF4444,
+                              ).withOpacity(0.1),
                               title: 'Notifications',
                               onTap: () {
                                 Navigator.pop(context);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const notifications.NotificationsSettingsScreen(),
+                                    builder: (context) =>
+                                        const notifications.NotificationsSettingsScreen(),
                                   ),
                                 );
                               },
@@ -815,14 +843,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               icon: LucideIcons.checkCircle,
                               iconColor: const Color(0xFF10B981),
-                              iconBgColor: const Color(0xFF10B981).withOpacity(0.1),
+                              iconBgColor: const Color(
+                                0xFF10B981,
+                              ).withOpacity(0.1),
                               title: 'Permissions',
                               onTap: () {
                                 Navigator.pop(context);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const permissions.PermissionsScreen(),
+                                    builder: (context) =>
+                                        const permissions.PermissionsScreen(),
                                   ),
                                 );
                               },
@@ -832,14 +863,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               icon: LucideIcons.palette,
                               iconColor: const Color(0xFFEC4899),
-                              iconBgColor: const Color(0xFFEC4899).withOpacity(0.1),
+                              iconBgColor: const Color(
+                                0xFFEC4899,
+                              ).withOpacity(0.1),
                               title: 'Appearance',
                               onTap: () {
                                 Navigator.pop(context);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const appearance.AppearanceScreen(),
+                                    builder: (context) =>
+                                        const appearance.AppearanceScreen(),
                                   ),
                                 );
                               },
@@ -849,14 +883,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               icon: LucideIcons.globe,
                               iconColor: const Color(0xFF6366F1),
-                              iconBgColor: const Color(0xFF6366F1).withOpacity(0.1),
+                              iconBgColor: const Color(
+                                0xFF6366F1,
+                              ).withOpacity(0.1),
                               title: 'Language',
                               onTap: () {
                                 Navigator.pop(context);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const language.LanguageScreen(),
+                                    builder: (context) =>
+                                        const language.LanguageScreen(),
                                   ),
                                 );
                               },
@@ -866,14 +903,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               icon: LucideIcons.beaker,
                               iconColor: const Color(0xFFF59E0B),
-                              iconBgColor: const Color(0xFFF59E0B).withOpacity(0.1),
+                              iconBgColor: const Color(
+                                0xFFF59E0B,
+                              ).withOpacity(0.1),
                               title: 'Language Test',
                               onTap: () {
                                 Navigator.pop(context);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const language_test.LanguageTestScreen(),
+                                    builder: (context) =>
+                                        const language_test.LanguageTestScreen(),
                                   ),
                                 );
                               },
@@ -906,14 +946,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               icon: LucideIcons.headphones,
                               iconColor: const Color(0xFF06B6D4),
-                              iconBgColor: const Color(0xFF06B6D4).withOpacity(0.1),
+                              iconBgColor: const Color(
+                                0xFF06B6D4,
+                              ).withOpacity(0.1),
                               title: 'Contact Support',
                               onTap: () {
                                 Navigator.pop(context);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const ContactSupportScreen(),
+                                    builder: (context) =>
+                                        const ContactSupportScreen(),
                                   ),
                                 );
                               },
@@ -923,14 +966,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               icon: LucideIcons.award,
                               iconColor: const Color(0xFFF59E0B),
-                              iconBgColor: const Color(0xFFF59E0B).withOpacity(0.1),
+                              iconBgColor: const Color(
+                                0xFFF59E0B,
+                              ).withOpacity(0.1),
                               title: 'Get Academic Badge',
                               onTap: () {
                                 Navigator.pop(context);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const GetAcademicBadgeScreen(),
+                                    builder: (context) =>
+                                        const GetAcademicBadgeScreen(),
                                   ),
                                 );
                               },
@@ -940,14 +986,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               icon: LucideIcons.messageSquare,
                               iconColor: const Color(0xFF06B6D4),
-                              iconBgColor: const Color(0xFF06B6D4).withOpacity(0.1),
+                              iconBgColor: const Color(
+                                0xFF06B6D4,
+                              ).withOpacity(0.1),
                               title: 'Send Feedback to Team',
                               onTap: () {
                                 Navigator.pop(context);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SendFeedbackScreen(),
+                                    builder: (context) =>
+                                        const SendFeedbackScreen(),
                                   ),
                                 );
                               },
@@ -985,7 +1034,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               builder: (context) => AlertDialog(
                                 title: const Text('Sign Out'),
-                                content: const Text('Are you sure you want to sign out?'),
+                                content: const Text(
+                                  'Are you sure you want to sign out?',
+                                ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context),
@@ -996,7 +1047,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                       Navigator.pop(context);
                                       _showFeatureMessage(context, 'Sign Out');
                                     },
-                                    child: const Text('Sign Out', style: TextStyle(color: Color(0xFFEF4444))),
+                                    child: const Text(
+                                      'Sign Out',
+                                      style: TextStyle(
+                                        color: Color(0xFFEF4444),
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1005,12 +1061,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           showChevron: false,
                         ),
                       ),
-              const SizedBox(height: 24),
-              SizedBox(height: MediaQuery.of(context).size.height + 200),
-                      ],
-                    ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height + 200,
+                      ),
+                    ],
                   ),
                 ),
+              ),
             ],
           ),
         ],
@@ -1040,11 +1098,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: iconBgColor,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                icon,
-                size: 20,
-                color: iconColor,
-              ),
+              child: Icon(icon, size: 20, color: iconColor),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -1072,10 +1126,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildDrawerDivider() {
     return Padding(
       padding: const EdgeInsets.only(left: 72),
-      child: Container(
-        height: 1,
-        color: const Color(0xFFF3F4F6),
-      ),
+      child: Container(height: 1, color: const Color(0xFFF3F4F6)),
     );
   }
 

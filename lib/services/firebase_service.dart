@@ -212,10 +212,12 @@ class FirebaseService {
     return snapshot.docs.map((doc) => User.fromJson(doc.data())).toList();
   }
 
+  /// P0-5 修复：更新用户在线状态
+  /// 使用 FieldValue.serverTimestamp() 确保时间一致性
   Future<void> updateUserOnlineStatus(String userId, bool isOnline) async {
     await _firestore.collection('users').doc(userId).update({
       'isOnline': isOnline,
-      'lastSeen': DateTime.now().toIso8601String(),
+      'lastSeen': FieldValue.serverTimestamp(),
     });
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../models/event.dart';
 import '../services/firebase_service.dart';
+import '../services/auth_service.dart';
 
 class CreateActivityScreen extends StatefulWidget {
   const CreateActivityScreen({super.key});
@@ -15,16 +16,18 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final FirebaseService _firebaseService = FirebaseService();
-  
+
   DateTime _startDateTime = DateTime.now();
   DateTime _endDateTime = DateTime.now().add(const Duration(hours: 1));
-  
+
   bool _requiresApproval = true;
   String _visibility = '公开';
   String _participantLimit = '不限人数';
   String _price = '免费';
   String? _selectedCoverImage;
-  final String _currentUserId = 'user_001';
+
+  // P0-2 修复：使用 AuthService 单例获取当前用户 ID
+  String get _currentUserId => AuthService.instance.requireCurrentUserId;
 
   @override
   void dispose() {
@@ -256,11 +259,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
         child: Row(
           children: [
             if (icon != null) ...[
-              Icon(
-                icon,
-                color: Colors.white.withOpacity(0.6),
-                size: 20,
-              ),
+              Icon(icon, color: Colors.white.withOpacity(0.6), size: 20),
               const SizedBox(width: 12),
             ],
             Expanded(
@@ -268,10 +267,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                 controller: controller,
                 maxLines: maxLines,
                 enabled: onTap == null,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                ),
+                style: const TextStyle(color: Colors.white, fontSize: 15),
                 decoration: InputDecoration(
                   hintText: hint,
                   hintStyle: TextStyle(
@@ -307,11 +303,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              color: iconColor,
-              size: 16,
-            ),
+            Icon(icon, color: iconColor, size: 16),
             const SizedBox(width: 12),
             Text(
               label,
@@ -323,10 +315,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
             const Spacer(),
             Text(
               dateTime,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 15),
             ),
           ],
         ),
@@ -348,11 +337,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: Colors.white.withOpacity(0.6),
-            size: 20,
-          ),
+          Icon(icon, color: Colors.white.withOpacity(0.6), size: 20),
           const SizedBox(width: 12),
           Text(
             label,
@@ -365,7 +350,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: Colors.white,
+            activeThumbColor: Colors.white,
             activeTrackColor: const Color(0xFF9333EA),
             inactiveThumbColor: Colors.white,
             inactiveTrackColor: Colors.white.withOpacity(0.3),
@@ -391,11 +376,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              color: Colors.white.withOpacity(0.6),
-              size: 20,
-            ),
+            Icon(icon, color: Colors.white.withOpacity(0.6), size: 20),
             const SizedBox(width: 12),
             Text(
               label,
@@ -407,10 +388,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
             const Spacer(),
             Text(
               value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 15),
             ),
             const SizedBox(width: 8),
             Icon(
@@ -445,10 +423,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                 child: TextField(
                   controller: _descriptionController,
                   maxLines: 3,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
                   decoration: InputDecoration(
                     hintText: '添加描述',
                     hintStyle: TextStyle(
@@ -490,11 +465,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
           color: const Color(0xFFDC2626),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          icon,
-          color: Colors.white,
-          size: 18,
-        ),
+        child: Icon(icon, color: Colors.white, size: 18),
       ),
     );
   }
@@ -504,7 +475,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
     final minute = dateTime.minute.toString().padLeft(2, '0');
     final period = hour >= 12 ? '下午' : '上午';
     final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-    
+
     if (includeDate) {
       return '${dateTime.year}年${dateTime.month}月${dateTime.day}日 $period $displayHour:$minute';
     } else {
@@ -534,7 +505,9 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
     if (pickedDate != null) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
-        initialTime: TimeOfDay.fromDateTime(isStart ? _startDateTime : _endDateTime),
+        initialTime: TimeOfDay.fromDateTime(
+          isStart ? _startDateTime : _endDateTime,
+        ),
         builder: (context, child) {
           return Theme(
             data: ThemeData.dark().copyWith(
@@ -606,7 +579,10 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                 decoration: InputDecoration(
                   hintText: '搜索地点...',
                   hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
-                  prefixIcon: Icon(LucideIcons.search, color: Colors.white.withOpacity(0.6)),
+                  prefixIcon: Icon(
+                    LucideIcons.search,
+                    color: Colors.white.withOpacity(0.6),
+                  ),
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.1),
                   border: OutlineInputBorder(
@@ -621,8 +597,14 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
               ),
               const SizedBox(height: 16),
               ListTile(
-                leading: Icon(LucideIcons.mapPin, color: Colors.white.withOpacity(0.6)),
-                title: const Text('使用当前位置', style: TextStyle(color: Colors.white)),
+                leading: Icon(
+                  LucideIcons.mapPin,
+                  color: Colors.white.withOpacity(0.6),
+                ),
+                title: const Text(
+                  '使用当前位置',
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () {
                   _locationController.text = '当前位置';
                   Navigator.pop(context);
@@ -681,7 +663,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
       final priceValue = _price.replaceAll('¥', '').trim();
       controller.text = priceValue;
     }
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -906,10 +888,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                   ),
                   const Text(
                     '添加封面图片',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                   ),
                   IconButton(
                     icon: const Icon(LucideIcons.search),
@@ -950,13 +929,15 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                         'assets/images/Board Games.jpg',
                         '桌游',
                         'Board Games',
-                        () => _selectCoverImage('assets/images/Board Games.jpg'),
+                        () =>
+                            _selectCoverImage('assets/images/Board Games.jpg'),
                       ),
                       _buildImageCard(
                         'assets/images/Coffee Chat.jpg',
                         '咖啡聊天',
                         'Coffee Chat',
-                        () => _selectCoverImage('assets/images/Coffee Chat.jpg'),
+                        () =>
+                            _selectCoverImage('assets/images/Coffee Chat.jpg'),
                       ),
                       _buildImageCard(
                         'assets/images/Gym.jpg',
@@ -1021,7 +1002,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   void _saveActivity() async {
     print('_saveActivity called');
     print('Activity name: ${_activityNameController.text}');
-    
+
     if (_activityNameController.text.isEmpty) {
       print('Activity name is empty, showing error');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1046,7 +1027,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
         category: 'Activity',
         title: _activityNameController.text,
         description: _descriptionController.text,
-        time: '${_startDateTime.hour}:${_startDateTime.minute.toString().padLeft(2, '0')}',
+        time:
+            '${_startDateTime.hour}:${_startDateTime.minute.toString().padLeft(2, '0')}',
         location: _locationController.text,
         participants: 1,
         budget: _parseBudget(_price),
@@ -1089,12 +1071,33 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   }
 
   String _getMonthName(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return months[month - 1];
   }
 
   String _getDayOfWeek(DateTime dateTime) {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
     return days[dateTime.weekday - 1];
   }
 
@@ -1118,11 +1121,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
           if (isSelected)
             const Padding(
               padding: EdgeInsets.only(right: 6),
-              child: Icon(
-                LucideIcons.sparkles,
-                size: 14,
-                color: Colors.white,
-              ),
+              child: Icon(LucideIcons.sparkles, size: 14, color: Colors.white),
             ),
           Text(
             label,
@@ -1144,53 +1143,56 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
     Navigator.pop(context);
   }
 
-  Widget _buildImageCard(String imageUrl, String title, String subtitle, VoidCallback onTap) {
+  Widget _buildImageCard(
+    String imageUrl,
+    String title,
+    String subtitle,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        image: DecorationImage(
-          image: AssetImage(imageUrl),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.transparent,
-              Colors.black.withOpacity(0.7),
+          image: DecorationImage(
+            image: AssetImage(imageUrl),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+            ),
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ),
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
       ),
-    ));
+    );
   }
 }

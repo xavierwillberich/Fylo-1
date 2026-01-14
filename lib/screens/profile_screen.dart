@@ -159,9 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const PaymentScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const PaymentScreen()),
             );
           },
         ),
@@ -221,9 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const AppearanceScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const AppearanceScreen()),
             );
           },
         ),
@@ -235,9 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const LanguageScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const LanguageScreen()),
             );
           },
         ),
@@ -295,11 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: iconBgColor,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    icon,
-                    color: iconColor,
-                    size: 20,
-                  ),
+                  child: Icon(icon, color: iconColor, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -335,9 +325,13 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameController = TextEditingController(text: 'Sarah Chen');
-  final _emailController = TextEditingController(text: 'sarah.chen@example.com');
+  final _emailController = TextEditingController(
+    text: 'sarah.chen@example.com',
+  );
   final _phoneController = TextEditingController(text: '+1 234 567 8900');
-  final _bioController = TextEditingController(text: 'Love exploring new activities and meeting new people!');
+  final _bioController = TextEditingController(
+    text: 'Love exploring new activities and meeting new people!',
+  );
 
   @override
   void dispose() {
@@ -441,14 +435,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             const SizedBox(height: 16),
             _buildTextField('Phone', _phoneController, LucideIcons.phone),
             const SizedBox(height: 16),
-            _buildTextField('Bio', _bioController, LucideIcons.fileText, maxLines: 4),
+            _buildTextField(
+              'Bio',
+              _bioController,
+              LucideIcons.fileText,
+              maxLines: 4,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    IconData icon, {
+    int maxLines = 1,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -484,7 +488,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               filled: true,
               fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
             ),
           ),
         ),
@@ -585,7 +592,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     );
   }
 
-  Widget _buildSwitchTile(String title, String subtitle, bool value, Function(bool) onChanged) {
+  Widget _buildSwitchTile(
+    String title,
+    String subtitle,
+    bool value,
+    Function(bool) onChanged,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -627,14 +639,19 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF6366F1),
+            activeThumbColor: const Color(0xFF6366F1),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActionButton(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionButton(
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -693,7 +710,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Account'),
-        content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
+        content: const Text(
+          'Are you sure you want to delete your account? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -754,12 +773,7 @@ class PaymentScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildPaymentCard(
-            'Visa',
-            '**** **** **** 4242',
-            '12/25',
-            true,
-          ),
+          _buildPaymentCard('Visa', '**** **** **** 4242', '12/25', true),
           const SizedBox(height: 12),
           _buildPaymentCard(
             'Mastercard',
@@ -785,7 +799,12 @@ class PaymentScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentCard(String type, String number, String expiry, bool isDefault) {
+  Widget _buildPaymentCard(
+    String type,
+    String number,
+    String expiry,
+    bool isDefault,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -817,7 +836,10 @@ class PaymentScreen extends StatelessWidget {
               ),
               if (isDefault)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
@@ -927,10 +949,12 @@ class NotificationsSettingsScreen extends StatefulWidget {
   const NotificationsSettingsScreen({super.key});
 
   @override
-  State<NotificationsSettingsScreen> createState() => _NotificationsSettingsScreenState();
+  State<NotificationsSettingsScreen> createState() =>
+      _NotificationsSettingsScreenState();
 }
 
-class _NotificationsSettingsScreenState extends State<NotificationsSettingsScreen> {
+class _NotificationsSettingsScreenState
+    extends State<NotificationsSettingsScreen> {
   bool _activityUpdates = true;
   bool _newMessages = true;
   bool _eventReminders = true;
@@ -992,7 +1016,12 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
     );
   }
 
-  Widget _buildNotificationTile(String title, String subtitle, bool value, Function(bool) onChanged) {
+  Widget _buildNotificationTile(
+    String title,
+    String subtitle,
+    bool value,
+    Function(bool) onChanged,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1034,7 +1063,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF6366F1),
+            activeThumbColor: const Color(0xFF6366F1),
           ),
         ],
       ),
@@ -1115,7 +1144,13 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
     );
   }
 
-  Widget _buildPermissionTile(String title, String subtitle, IconData icon, bool value, Function(bool) onChanged) {
+  Widget _buildPermissionTile(
+    String title,
+    String subtitle,
+    IconData icon,
+    bool value,
+    Function(bool) onChanged,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1166,7 +1201,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF6366F1),
+            activeThumbColor: const Color(0xFF6366F1),
           ),
         ],
       ),
@@ -1340,7 +1375,9 @@ class _LanguageScreenState extends State<LanguageScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected ? const Color(0xFF6366F1) : Colors.transparent,
+                color: isSelected
+                    ? const Color(0xFF6366F1)
+                    : Colors.transparent,
                 width: 2,
               ),
               boxShadow: [
@@ -1354,7 +1391,8 @@ class _LanguageScreenState extends State<LanguageScreen> {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () => setState(() => _selectedLanguage = language['name']!),
+                onTap: () =>
+                    setState(() => _selectedLanguage = language['name']!),
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -1597,10 +1635,7 @@ class _LanguageTestScreenState extends State<LanguageTestScreen> {
             const SizedBox(height: 12),
             Text(
               'You scored $_score out of ${_questions.length}',
-              style: const TextStyle(
-                color: Color(0xFF6B7280),
-                fontSize: 16,
-              ),
+              style: const TextStyle(color: Color(0xFF6B7280), fontSize: 16),
             ),
             const SizedBox(height: 48),
             SizedBox(
@@ -1616,10 +1651,7 @@ class _LanguageTestScreenState extends State<LanguageTestScreen> {
                 ),
                 child: const Text(
                   'Retake Test',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),

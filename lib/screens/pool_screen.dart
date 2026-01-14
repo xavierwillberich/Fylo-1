@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import '../models/post.dart';
 import '../services/firebase_service.dart';
 import '../widgets/post_card.dart';
@@ -37,44 +36,44 @@ class _PoolScreenState extends State<PoolScreen> {
             child: Column(
               children: [
                 SizedBox(height: MediaQuery.of(context).padding.top + 16),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    child: Row(
-                      children: tabs.map((tab) {
-                        final isActive = tab == activeTab;
-                        return Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                activeTab = tab;
-                              });
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 5),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Row(
+                    children: tabs.map((tab) {
+                      final isActive = tab == activeTab;
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              activeTab = tab;
+                            });
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 5),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? Colors.white
+                                  : Colors.white.withOpacity(0.25),
+                              borderRadius: BorderRadius.circular(22),
+                            ),
+                            child: Text(
+                              tab,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
                                 color: isActive
-                                    ? Colors.white
-                                    : Colors.white.withOpacity(0.25),
-                                borderRadius: BorderRadius.circular(22),
-                              ),
-                              child: Text(
-                                tab,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: isActive
-                                      ? const Color(0xFF9333EA)
-                                      : Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
+                                    ? const Color(0xFF9333EA)
+                                    : Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
                               ),
                             ),
                           ),
-                        );
-                      }).toList(),
-                    ),
+                        ),
+                      );
+                    }).toList(),
                   ),
+                ),
               ],
             ),
           ),
@@ -99,7 +98,8 @@ class _PoolScreenState extends State<PoolScreen> {
                     final post = posts[index];
                     return PostCard(
                       post: post,
-                      onLike: () => toggleLike(post.id, post.isLiked, post.likes),
+                      onLike: () =>
+                          toggleLike(post.id, post.isLiked, post.likes),
                       onComment: () {},
                       onShare: () {},
                       onFollow: () => toggleFollow(post.id, post.isFollowing),

@@ -7,10 +7,7 @@ import '../models/event.dart';
 class ActivityDetailScreen extends StatefulWidget {
   final Event event;
 
-  const ActivityDetailScreen({
-    super.key,
-    required this.event,
-  });
+  const ActivityDetailScreen({super.key, required this.event});
 
   @override
   State<ActivityDetailScreen> createState() => _ActivityDetailScreenState();
@@ -24,13 +21,15 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
   final List<Map<String, dynamic>> _comments = [
     {
       'user': 'Mike R.',
-      'avatar': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
+      'avatar':
+          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100',
       'text': 'Really excited for this! Can\'t wait to meet everyone!',
       'timestamp': '2 hours ago',
     },
     {
       'user': 'Sarah M.',
-      'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
+      'avatar':
+          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
       'text': 'Should we bring anything specific?',
       'timestamp': '1 hour ago',
     },
@@ -65,17 +64,21 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
   }
 
   String _getWeatherAdvice() {
-    final isOutdoor = ['Trips', 'Sports', 'Coffee Chat'].contains(widget.event.category);
-    
+    final isOutdoor = [
+      'Trips',
+      'Sports',
+      'Coffee Chat',
+    ].contains(widget.event.category);
+
     switch (widget.event.weather) {
       case Weather.rainy:
-        return isOutdoor 
-          ? 'Rain expected. Bring an umbrella and waterproof gear!'
-          : 'Rain expected. Indoor venue recommended.';
+        return isOutdoor
+            ? 'Rain expected. Bring an umbrella and waterproof gear!'
+            : 'Rain expected. Indoor venue recommended.';
       case Weather.snowy:
         return isOutdoor
-          ? 'Snow expected. Dress warmly in layers!'
-          : 'Snow expected. Allow extra travel time.';
+            ? 'Snow expected. Dress warmly in layers!'
+            : 'Snow expected. Allow extra travel time.';
       case Weather.cloudy:
         return 'Cloudy weather. Perfect for outdoor activities!';
       case Weather.partlyCloudy:
@@ -89,7 +92,8 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
 
   void _shareActivity() {
     final activityId = _generateActivityId();
-    final shareText = '''
+    final shareText =
+        '''
 🎉 ${widget.event.title}
 
 📅 ${widget.event.dayOfWeek}, ${widget.event.date} ${widget.event.month}
@@ -104,21 +108,17 @@ Activity ID: $activityId
 ${widget.event.recruiting ? '✅ Open for registration!' : '📝 Application required'}
 
 Join us on Fylo!
-'''.trim();
+'''
+            .trim();
 
-    Share.share(
-      shareText,
-      subject: widget.event.title,
-    );
+    Share.share(shareText, subject: widget.event.title);
   }
 
   void _showMoreOptions(BuildContext context) {
     showMenu(
       context: context,
       position: const RelativeRect.fromLTRB(100, 500, 20, 0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: const Color(0xFF2D1B4E),
       elevation: 8,
       items: [
@@ -180,11 +180,7 @@ Join us on Fylo!
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Icon(
-              icon,
-              color: Colors.white,
-              size: 20,
-            ),
+            Icon(icon, color: Colors.white, size: 20),
             const SizedBox(width: 12),
             Text(
               title,
@@ -251,7 +247,11 @@ Join us on Fylo!
                                   ],
                                 ),
                                 child: IconButton(
-                                  icon: const Icon(LucideIcons.arrowLeft, color: Colors.white, size: 22),
+                                  icon: const Icon(
+                                    LucideIcons.arrowLeft,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
                                   onPressed: () => Navigator.pop(context),
                                   padding: const EdgeInsets.all(10),
                                   constraints: const BoxConstraints(),
@@ -272,11 +272,19 @@ Join us on Fylo!
                                       ],
                                     ),
                                     child: IconButton(
-                                      icon: const Icon(LucideIcons.heart, color: Colors.white, size: 22),
+                                      icon: const Icon(
+                                        LucideIcons.heart,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
                                       onPressed: () {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           const SnackBar(
-                                            content: Text('Added to favorites!'),
+                                            content: Text(
+                                              'Added to favorites!',
+                                            ),
                                             duration: Duration(seconds: 2),
                                           ),
                                         );
@@ -299,7 +307,11 @@ Join us on Fylo!
                                       ],
                                     ),
                                     child: IconButton(
-                                      icon: const Icon(LucideIcons.share2, color: Colors.white, size: 22),
+                                      icon: const Icon(
+                                        LucideIcons.share2,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
                                       onPressed: _shareActivity,
                                       padding: const EdgeInsets.all(10),
                                       constraints: const BoxConstraints(),
@@ -380,7 +392,10 @@ Join us on Fylo!
                               top: 12,
                               right: 12,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.black.withOpacity(0.5),
                                   borderRadius: BorderRadius.circular(12),
@@ -390,7 +405,9 @@ Join us on Fylo!
                                     widget.event.images.length,
                                     (index) => Container(
                                       margin: const EdgeInsets.only(left: 4),
-                                      width: index == currentImageIndex ? 16 : 6,
+                                      width: index == currentImageIndex
+                                          ? 16
+                                          : 6,
                                       height: 6,
                                       decoration: BoxDecoration(
                                         color: index == currentImageIndex
@@ -498,7 +515,10 @@ Join us on Fylo!
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFF10B981).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
@@ -535,10 +555,7 @@ Join us on Fylo!
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF6366F1),
-                                  Color(0xFF9333EA),
-                                ],
+                                colors: [Color(0xFF6366F1), Color(0xFF9333EA)],
                               ),
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
@@ -566,7 +583,9 @@ Join us on Fylo!
                                 },
                                 borderRadius: BorderRadius.circular(16),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -596,10 +615,7 @@ Join us on Fylo!
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF6366F1),
-                                  Color(0xFF9333EA),
-                                ],
+                                colors: [Color(0xFF6366F1), Color(0xFF9333EA)],
                               ),
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
@@ -618,7 +634,9 @@ Join us on Fylo!
                                 },
                                 borderRadius: BorderRadius.circular(16),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -648,10 +666,7 @@ Join us on Fylo!
                           child: Container(
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF6366F1),
-                                  Color(0xFF9333EA),
-                                ],
+                                colors: [Color(0xFF6366F1), Color(0xFF9333EA)],
                               ),
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
@@ -668,7 +683,9 @@ Join us on Fylo!
                                 onTap: () => _showMoreOptions(context),
                                 borderRadius: BorderRadius.circular(16),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -704,7 +721,11 @@ Join us on Fylo!
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(LucideIcons.mapPin, size: 18, color: Color(0xFF6B7280)),
+                          const Icon(
+                            LucideIcons.mapPin,
+                            size: 18,
+                            color: Color(0xFF6B7280),
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -748,7 +769,10 @@ Join us on Fylo!
                               _buildBadge(widget.event.category, null),
                               if (widget.event.recruiting)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFF10B981),
                                     borderRadius: BorderRadius.circular(12),
@@ -764,7 +788,7 @@ Join us on Fylo!
                                 ),
                             ],
                           ),
-                          if (widget.event.description != null) ...[
+                          ...[
                             const SizedBox(height: 16),
                             Text(
                               widget.event.description!,
@@ -826,14 +850,18 @@ Join us on Fylo!
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: widget.event.weather == Weather.rainy || widget.event.weather == Weather.snowy
-                            ? const Color(0xFFFEF2F2)
-                            : const Color(0xFFF0FDF4),
+                          color:
+                              widget.event.weather == Weather.rainy ||
+                                  widget.event.weather == Weather.snowy
+                              ? const Color(0xFFFEF2F2)
+                              : const Color(0xFFF0FDF4),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: widget.event.weather == Weather.rainy || widget.event.weather == Weather.snowy
-                              ? const Color(0xFFFECACA)
-                              : const Color(0xFFBBF7D0),
+                            color:
+                                widget.event.weather == Weather.rainy ||
+                                    widget.event.weather == Weather.snowy
+                                ? const Color(0xFFFECACA)
+                                : const Color(0xFFBBF7D0),
                             width: 1,
                           ),
                         ),
@@ -842,9 +870,11 @@ Join us on Fylo!
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: widget.event.weather == Weather.rainy || widget.event.weather == Weather.snowy
-                                  ? const Color(0xFFDC2626)
-                                  : const Color(0xFF10B981),
+                                color:
+                                    widget.event.weather == Weather.rainy ||
+                                        widget.event.weather == Weather.snowy
+                                    ? const Color(0xFFDC2626)
+                                    : const Color(0xFF10B981),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -861,9 +891,13 @@ Join us on Fylo!
                                   Text(
                                     '${widget.event.temperature}°F',
                                     style: TextStyle(
-                                      color: widget.event.weather == Weather.rainy || widget.event.weather == Weather.snowy
-                                        ? const Color(0xFF991B1B)
-                                        : const Color(0xFF065F46),
+                                      color:
+                                          widget.event.weather ==
+                                                  Weather.rainy ||
+                                              widget.event.weather ==
+                                                  Weather.snowy
+                                          ? const Color(0xFF991B1B)
+                                          : const Color(0xFF065F46),
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -872,9 +906,13 @@ Join us on Fylo!
                                   Text(
                                     _getWeatherAdvice(),
                                     style: TextStyle(
-                                      color: widget.event.weather == Weather.rainy || widget.event.weather == Weather.snowy
-                                        ? const Color(0xFF991B1B)
-                                        : const Color(0xFF065F46),
+                                      color:
+                                          widget.event.weather ==
+                                                  Weather.rainy ||
+                                              widget.event.weather ==
+                                                  Weather.snowy
+                                          ? const Color(0xFF991B1B)
+                                          : const Color(0xFF065F46),
                                       fontSize: 14,
                                     ),
                                   ),
@@ -972,53 +1010,58 @@ Join us on Fylo!
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ..._comments.map((comment) => Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                CircleAvatar(
-                                  radius: 20,
-                                  backgroundImage: NetworkImage(comment['avatar']),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            comment['user'],
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            comment['timestamp'],
-                                            style: TextStyle(
-                                              color: Colors.grey[500],
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        comment['text'],
-                                        style: const TextStyle(
-                                          color: Color(0xFF374151),
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
+                          ..._comments.map(
+                            (comment) => Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 20,
+                                    backgroundImage: NetworkImage(
+                                      comment['avatar'],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              comment['user'],
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              comment['timestamp'],
+                                              style: TextStyle(
+                                                color: Colors.grey[500],
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          comment['text'],
+                                          style: const TextStyle(
+                                            color: Color(0xFF374151),
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          )),
+                          ),
                           const SizedBox(height: 8),
                           Row(
                             children: [
@@ -1069,7 +1112,8 @@ Join us on Fylo!
                                       setState(() {
                                         _comments.add({
                                           'user': 'You',
-                                          'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
+                                          'avatar':
+                                              'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
                                           'text': value,
                                           'timestamp': 'Just now',
                                         });
@@ -1117,10 +1161,7 @@ Join us on Fylo!
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: const Color(0xFFF3F4F6),
-        border: Border.all(
-          color: const Color(0xFFD1D5DB),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFD1D5DB), width: 1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -1153,10 +1194,7 @@ Join us on Fylo!
             const SizedBox(width: 12),
             Text(
               label,
-              style: const TextStyle(
-                color: Color(0xFF6B7280),
-                fontSize: 15,
-              ),
+              style: const TextStyle(color: Color(0xFF6B7280), fontSize: 15),
             ),
           ],
         ),

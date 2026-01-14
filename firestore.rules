@@ -1,71 +1,159 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 用户集合
+    
+    // ============================================
+    // 辅助函数
+    // ============================================
+    
+    // 检查用户是否已认证
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // 检查是否是当前用户
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // 检查是否是会话参与者
+    function isConversationParticipant(conversationId) {
+      return isAuthenticated() && 
+        request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
+    }
+    
+    // ============================================
+    // 用户集合 - 仅本人可读写
+    // ============================================
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId;
+      // 读取：仅本人可读自己的完整资料
+      // 如需公开资料（如头像、昵称），可添加 isPublic 字段判断
+      allow read: if isOwner(userId);
+      
+      // 创建：仅本人可创建自己的文档
+      allow create: if isOwner(userId);
+      
+      // 更新/删除：仅本人可操作
+      allow update, delete: if isOwner(userId);
       
       // 用户偏好设置子集合
-      match /preferences/{document=**} {
-        allow read: if request.auth != null && request.auth.uid == userId;
-        allow write: if request.auth != null && request.auth.uid == userId;
+      match /preferences/{prefId} {
+        allow read, write: if isOwner(userId);
       }
     }
-
-    // 活动集合
-    match /activities/{activityId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null && (
-        resource.data.creatorId == request.auth.uid ||
-        request.auth.uid in resource.data.participantIds
-      );
-      allow delete: if request.auth != null && resource.data.creatorId == request.auth.uid;
-    }
-
-    // 事件集合
+    
+    // ============================================
+    // 活动/事件集合 - 认证用户可读，创建者/参与者可改
+    // ============================================
     match /events/{eventId} {
-      allow read: if true;
-      allow create: if true; // Temporarily allow unauthenticated creates for testing
-      allow update: if request.auth != null && (
+      // 读取：仅认证用户可读
+      allow read: if isAuthenticated();
+      
+      // 创建：仅认证用户可创建，且 creatorId 必须是自己
+      allow create: if isAuthenticated() && 
+        request.resource.data.creatorId == request.auth.uid;
+      
+      // 更新：创建者或参与者可更新
+      allow update: if isAuthenticated() && (
         resource.data.creatorId == request.auth.uid ||
         request.auth.uid in resource.data.participantIds
       );
-      allow delete: if request.auth != null && resource.data.creatorId == request.auth.uid;
+      
+      // 删除：仅创建者可删除
+      allow delete: if isAuthenticated() && 
+        resource.data.creatorId == request.auth.uid;
     }
-
-    // 帖子集合
+    
+    // ============================================
+    // 帖子集合 - 认证用户可读，作者可改
+    // ============================================
     match /posts/{postId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      // 读取：仅认证用户可读
+      allow read: if isAuthenticated();
+      
+      // 创建：仅认证用户可创建，且 userId 必须是自己
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // 更新/删除：仅作者可操作
+      allow update, delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
     }
-
-    // 通知集合
+    
+    // ============================================
+    // 通知集合 - 仅接收者可读写
+    // ============================================
     match /notifications/{notificationId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      // 读取：仅接收者可读
+      allow read: if isAuthenticated() && 
+        resource.data.receiverId == request.auth.uid;
+      
+      // 创建：认证用户可创建（通常由后端/Cloud Functions 创建）
+      allow create: if isAuthenticated();
+      
+      // 更新：仅接收者可更新（如标记已读）
+      allow update: if isAuthenticated() && 
+        resource.data.receiverId == request.auth.uid;
+      
+      // 删除：仅接收者可删除
+      allow delete: if isAuthenticated() && 
+        resource.data.receiverId == request.auth.uid;
     }
-
-    // 会话集合
+    
+    // ============================================
+    // 会话集合 - 仅参与者可读写
+    // ============================================
     match /conversations/{conversationId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null && request.auth.uid in resource.data.participantIds;
-      allow delete: if request.auth != null && request.auth.uid in resource.data.participantIds;
-
+      // 读取：仅参与者可读
+      allow read: if isAuthenticated() && 
+        request.auth.uid in resource.data.participantIds;
+      
+      // 创建：认证用户可创建，且自己必须在参与者列表中
+      allow create: if isAuthenticated() && 
+        request.auth.uid in request.resource.data.participantIds;
+      
+      // 更新：仅参与者可更新
+      allow update: if isAuthenticated() && 
+        request.auth.uid in resource.data.participantIds;
+      
+      // 删除：仅参与者可删除（软删除更好）
+      allow delete: if isAuthenticated() && 
+        request.auth.uid in resource.data.participantIds;
+      
+      // ----------------------------------------
       // 消息子集合
+      // ----------------------------------------
       match /messages/{messageId} {
-        allow read: if true;
-        allow create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
-        allow update: if request.auth != null && resource.data.senderId == request.auth.uid;
-        allow delete: if request.auth != null && resource.data.senderId == request.auth.uid;
+        // 读取：仅会话参与者可读
+        allow read: if isConversationParticipant(conversationId);
+        
+        // 创建：仅会话参与者可创建，且 senderId 必须是自己
+        allow create: if isConversationParticipant(conversationId) && 
+          request.resource.data.senderId == request.auth.uid;
+        
+        // 更新：仅发送者可更新（如编辑消息）
+        allow update: if isAuthenticated() && 
+          resource.data.senderId == request.auth.uid;
+        
+        // 删除：仅发送者可删除
+        allow delete: if isAuthenticated() && 
+          resource.data.senderId == request.auth.uid;
       }
+    }
+    
+    // ============================================
+    // activities 集合（保留兼容性）
+    // ============================================
+    match /activities/{activityId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        request.resource.data.creatorId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.creatorId == request.auth.uid ||
+        request.auth.uid in resource.data.participantIds
+      );
+      allow delete: if isAuthenticated() && 
+        resource.data.creatorId == request.auth.uid;
     }
   }
 }

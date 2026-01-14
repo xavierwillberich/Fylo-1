@@ -48,7 +48,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 value: _isPrivateAccount,
                 onChanged: (value) {
                   setState(() => _isPrivateAccount = value);
-                  _showSnackBar('Private account ${value ? "enabled" : "disabled"}');
+                  _showSnackBar(
+                    'Private account ${value ? "enabled" : "disabled"}',
+                  );
                 },
               ),
               const Divider(height: 1),
@@ -61,7 +63,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 value: _showActivityStatus,
                 onChanged: (value) {
                   setState(() => _showActivityStatus = value);
-                  _showSnackBar('Activity status ${value ? "visible" : "hidden"}');
+                  _showSnackBar(
+                    'Activity status ${value ? "visible" : "hidden"}',
+                  );
                 },
               ),
               const Divider(height: 1),
@@ -148,7 +152,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     );
   }
 
-  Widget _buildSection({required String title, required List<Widget> children}) {
+  Widget _buildSection({
+    required String title,
+    required List<Widget> children,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -223,7 +230,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF6366F1),
+            activeThumbColor: const Color(0xFF6366F1),
           ),
         ],
       ),
@@ -388,7 +395,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               Navigator.pop(context);
               _showSnackBar('Account deactivated');
             },
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFFF59E0B)),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFF59E0B),
+            ),
             child: const Text('Deactivate'),
           ),
         ],
@@ -414,7 +423,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               Navigator.pop(context);
               _showSnackBar('Account deletion requires email verification');
             },
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFFEF4444)),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFEF4444),
+            ),
             child: const Text('Delete'),
           ),
         ],
@@ -424,10 +435,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 }

@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'dart:math' as math;
 
 class ChatDetailScreen extends StatefulWidget {
   final Map<String, dynamic> chat;
 
-  const ChatDetailScreen({
-    super.key,
-    required this.chat,
-  });
+  const ChatDetailScreen({super.key, required this.chat});
 
   @override
   State<ChatDetailScreen> createState() => _ChatDetailScreenState();
@@ -17,7 +13,7 @@ class ChatDetailScreen extends StatefulWidget {
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  
+
   List<Map<String, dynamic>> _messages = [];
 
   @override
@@ -28,38 +24,116 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   void _initializeMessages() {
     final bool isGroup = widget.chat['isGroup'] ?? false;
-    
+
     if (isGroup) {
       _messages = [
-        {'id': 1, 'type': 'sent', 'message': 'Everyone ready for the hike? Let\'s check in! 🏔️'},
+        {
+          'id': 1,
+          'type': 'sent',
+          'message': 'Everyone ready for the hike? Let\'s check in! 🏔️',
+        },
         {'id': 2, 'type': 'checkin', 'message': 'You checked in'},
-        {'id': 3, 'type': 'received', 'message': 'I\'m here! Perfect day for it', 'sender': 'Tom', 'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'},
+        {
+          'id': 3,
+          'type': 'received',
+          'message': 'I\'m here! Perfect day for it',
+          'sender': 'Tom',
+          'avatar':
+              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+        },
         {'id': 4, 'type': 'checkin', 'message': 'Tom Checked in'},
         {'id': 5, 'type': 'checkin', 'message': 'Alice Chen Checked in'},
         {'id': 6, 'type': 'checkin', 'message': 'Tom Branson Checked in'},
         {'id': 7, 'type': 'checkin', 'message': 'Eve Smith Checked in'},
         {'id': 8, 'type': 'checkin', 'message': 'Kush Singh Checked in'},
         {'id': 9, 'type': 'sent', 'message': 'Still waiting for Helena?'},
-        {'id': 10, 'type': 'sent', 'message': 'Should we grab water while we wait?'},
+        {
+          'id': 10,
+          'type': 'sent',
+          'message': 'Should we grab water while we wait?',
+        },
         {'id': 11, 'type': 'checkin', 'message': 'Helena Hills Checked in'},
         {'id': 12, 'type': 'weather'},
-        {'id': 13, 'type': 'received', 'message': 'Wow 35°C is intense! Everyone bring sunscreen?', 'sender': 'Tom', 'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'},
-        {'id': 14, 'type': 'sent', 'message': 'Yeah good call on the weather alert'},
-        {'id': 15, 'type': 'sent', 'message': 'Just bought some water bottles for everyone'},
+        {
+          'id': 13,
+          'type': 'received',
+          'message': 'Wow 35°C is intense! Everyone bring sunscreen?',
+          'sender': 'Tom',
+          'avatar':
+              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+        },
+        {
+          'id': 14,
+          'type': 'sent',
+          'message': 'Yeah good call on the weather alert',
+        },
+        {
+          'id': 15,
+          'type': 'sent',
+          'message': 'Just bought some water bottles for everyone',
+        },
         {'id': 16, 'type': 'transaction'},
-        {'id': 17, 'type': 'received', 'message': 'Thanks for getting the water!', 'sender': 'Alice', 'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100'},
-        {'id': 18, 'type': 'received', 'message': 'We should split the costs for today', 'sender': 'Eve', 'avatar': 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100'},
-        {'id': 19, 'type': 'received', 'message': 'I\'ll create a bill split for everything', 'sender': 'Tom', 'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100'},
+        {
+          'id': 17,
+          'type': 'received',
+          'message': 'Thanks for getting the water!',
+          'sender': 'Alice',
+          'avatar':
+              'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
+        },
+        {
+          'id': 18,
+          'type': 'received',
+          'message': 'We should split the costs for today',
+          'sender': 'Eve',
+          'avatar':
+              'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100',
+        },
+        {
+          'id': 19,
+          'type': 'received',
+          'message': 'I\'ll create a bill split for everything',
+          'sender': 'Tom',
+          'avatar':
+              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
+        },
         {'id': 20, 'type': 'billsplit'},
         {'id': 21, 'type': 'sent', 'message': 'Perfect! Just paid my share 💸'},
       ];
     } else {
       _messages = [
-        {'id': 1, 'type': 'received', 'message': 'Hey! How\'s it going?', 'sender': widget.chat['name'], 'avatar': widget.chat['avatar']},
-        {'id': 2, 'type': 'sent', 'message': 'Pretty good! Just got back from a hike'},
-        {'id': 3, 'type': 'received', 'message': 'Nice! Where did you go?', 'sender': widget.chat['name'], 'avatar': widget.chat['avatar']},
-        {'id': 4, 'type': 'sent', 'message': 'George Bass coastal walk. The views were amazing!'},
-        {'id': 5, 'type': 'received', 'message': 'That sounds awesome! Maybe we can go together next time? 🏔️', 'sender': widget.chat['name'], 'avatar': widget.chat['avatar']},
+        {
+          'id': 1,
+          'type': 'received',
+          'message': 'Hey! How\'s it going?',
+          'sender': widget.chat['name'],
+          'avatar': widget.chat['avatar'],
+        },
+        {
+          'id': 2,
+          'type': 'sent',
+          'message': 'Pretty good! Just got back from a hike',
+        },
+        {
+          'id': 3,
+          'type': 'received',
+          'message': 'Nice! Where did you go?',
+          'sender': widget.chat['name'],
+          'avatar': widget.chat['avatar'],
+        },
+        {
+          'id': 4,
+          'type': 'sent',
+          'message': 'George Bass coastal walk. The views were amazing!',
+        },
+        {
+          'id': 5,
+          'type': 'received',
+          'message':
+              'That sounds awesome! Maybe we can go together next time? 🏔️',
+          'sender': widget.chat['name'],
+          'avatar': widget.chat['avatar'],
+        },
       ];
     }
   }
@@ -83,7 +157,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     });
 
     _messageController.clear();
-    
+
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -176,10 +250,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   else
                     const Text(
                       'Online',
-                      style: TextStyle(
-                        color: Color(0xFF10B981),
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Color(0xFF10B981), fontSize: 12),
                     ),
                 ],
               ),
@@ -207,7 +278,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               itemBuilder: (context, index) {
                 final message = _messages[index];
                 final type = message['type'] as String;
-                
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: _buildMessage(message, type),
@@ -220,21 +291,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(
-                top: BorderSide(
-                  color: Colors.grey[200]!,
-                  width: 1,
-                ),
+                top: BorderSide(color: Colors.grey[200]!, width: 1),
               ),
             ),
             child: SafeArea(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF5F5F5),
-                  border: Border.all(
-                    color: const Color(0xFFE0E0E0),
-                    width: 1,
-                  ),
+                  border: Border.all(color: const Color(0xFFE0E0E0), width: 1),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Row(
@@ -246,10 +314,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFFA855F7),
-                            Color(0xFFEC4899),
-                          ],
+                          colors: [Color(0xFFA855F7), Color(0xFFEC4899)],
                         ),
                         shape: BoxShape.circle,
                         boxShadow: [
@@ -328,10 +393,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     return Center(
       child: Text(
         message['message'],
-        style: const TextStyle(
-          color: Color(0xFF6B7280),
-          fontSize: 13,
-        ),
+        style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
       ),
     );
   }
@@ -361,151 +423,155 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-            Positioned(
-              top: -32,
-              right: 30,
-              child: Container(
-                width: 128,
-                height: 128,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFFFFD700), Color(0xFFFFED4E)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFFD700).withOpacity(0.4),
-                      blurRadius: 60,
-                      spreadRadius: 20,
+              Positioned(
+                top: -32,
+                right: 30,
+                child: Container(
+                  width: 128,
+                  height: 128,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFFFFD700), Color(0xFFFFED4E)],
                     ),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              top: -16,
-              right: 15,
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0xFFFFF200), Color(0xFFFFD700)],
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFD700).withOpacity(0.4),
+                        blurRadius: 60,
+                        spreadRadius: 20,
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: IconButton(
-                icon: const Icon(LucideIcons.x, color: Colors.white, size: 16),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: () {},
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        LucideIcons.sun,
-                        color: Colors.white,
-                        size: 20,
-                      ),
+              Positioned(
+                top: -16,
+                right: 15,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFFFFF200), Color(0xFFFFD700)],
                     ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'Weather Alert',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                '🔥 35°C',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 12),
-                const Text(
-                  'High temperature expected during your activity. Stay hydrated and take breaks in the shade! 💧',
-                  style: TextStyle(
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: IconButton(
+                  icon: const Icon(
+                    LucideIcons.x,
                     color: Colors.white,
-                    fontSize: 14,
-                    height: 1.4,
+                    size: 16,
                   ),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () {},
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.25),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
                         ),
-                        child: const Text('Safety Tips'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.1),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
+                        child: const Icon(
+                          LucideIcons.sun,
+                          color: Colors.white,
+                          size: 20,
                         ),
-                        child: const Text('Got it'),
                       ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'Weather Alert',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  '🔥 35°C',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'High temperature expected during your activity. Stay hydrated and take breaks in the shade! 💧',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      height: 1.4,
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.25),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: const Text('Safety Tips'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {},
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white.withOpacity(0.1),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: const Text('Got it'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -545,100 +611,100 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               ),
             ),
             Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    LucideIcons.dollarSign,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        LucideIcons.dollarSign,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Transaction Detected',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            '💳 \$45.99',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                'Transaction Detected',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                '💳 \$45.99',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Would you like to record this as an event expense? 📝',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    height: 1.4,
                   ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF22C55E),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: const Text('Record It'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: const Text('Skip'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            const Text(
-              'Would you like to record this as an event expense? 📝',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF22C55E),
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: const Text('Record It'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: const Text('Skip'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
           ],
         ),
       ),
@@ -698,10 +764,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       SizedBox(width: 8),
                       Text(
                         '💸 Pending',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white, fontSize: 14),
                       ),
                     ],
                   ),
@@ -722,10 +785,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     children: [
                       Text(
                         'Total Amount',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                       Text(
                         '\$231',
@@ -743,10 +803,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     children: [
                       Text(
                         'Your Share',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                       Text(
                         '\$33',
@@ -763,18 +820,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(
-                        LucideIcons.users,
-                        color: Colors.white70,
-                        size: 14,
-                      ),
+                      Icon(LucideIcons.users, color: Colors.white70, size: 14),
                       SizedBox(width: 6),
                       Text(
                         '2 people haven\'t paid yet',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                     ],
                   ),
@@ -850,10 +900,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         ),
         child: Text(
           message['message'],
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 15,
-          ),
+          style: const TextStyle(color: Colors.white, fontSize: 15),
         ),
       ),
     );
@@ -889,10 +936,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             ),
             child: Text(
               message['message'],
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 15,
-              ),
+              style: const TextStyle(color: Colors.black, fontSize: 15),
             ),
           ),
         ],

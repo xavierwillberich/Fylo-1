@@ -45,24 +45,36 @@ class _MessagesScreenState extends State<MessagesScreen> {
   List<Map<String, dynamic>> get filteredGroupChats {
     if (_searchController.text.isEmpty) return groupChats;
     return groupChats.where((chat) {
-      return chat['name'].toString().toLowerCase().contains(_searchController.text.toLowerCase()) ||
-             chat['lastMessage'].toString().toLowerCase().contains(_searchController.text.toLowerCase());
+      return chat['name'].toString().toLowerCase().contains(
+            _searchController.text.toLowerCase(),
+          ) ||
+          chat['lastMessage'].toString().toLowerCase().contains(
+            _searchController.text.toLowerCase(),
+          );
     }).toList();
   }
 
   List<Map<String, dynamic>> get filteredPrivateChats {
     if (_searchController.text.isEmpty) return privateChats;
     return privateChats.where((chat) {
-      return chat['name'].toString().toLowerCase().contains(_searchController.text.toLowerCase()) ||
-             chat['lastMessage'].toString().toLowerCase().contains(_searchController.text.toLowerCase());
+      return chat['name'].toString().toLowerCase().contains(
+            _searchController.text.toLowerCase(),
+          ) ||
+          chat['lastMessage'].toString().toLowerCase().contains(
+            _searchController.text.toLowerCase(),
+          );
     }).toList();
   }
 
   List<Map<String, dynamic>> get filteredNotifications {
     if (_searchController.text.isEmpty) return notifications;
     return notifications.where((notification) {
-      return notification['title'].toString().toLowerCase().contains(_searchController.text.toLowerCase()) ||
-             notification['message'].toString().toLowerCase().contains(_searchController.text.toLowerCase());
+      return notification['title'].toString().toLowerCase().contains(
+            _searchController.text.toLowerCase(),
+          ) ||
+          notification['message'].toString().toLowerCase().contains(
+            _searchController.text.toLowerCase(),
+          );
     }).toList();
   }
 
@@ -70,7 +82,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
     {
       'id': 'g1',
       'name': 'Hiking in George Bass',
-      'avatar': 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=100&h=100&fit=crop',
+      'avatar':
+          'https://images.unsplash.com/photo-1551632811-561732d1e306?w=100&h=100&fit=crop',
       'lastMessage': 'Perfect! Just paid my share 💸',
       'time': '2m',
       'isUnread': true,
@@ -80,7 +93,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
     {
       'id': 'g2',
       'name': 'Beach Volleyball Squad',
-      'avatar': 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=100&h=100&fit=crop',
+      'avatar':
+          'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=100&h=100&fit=crop',
       'lastMessage': 'Same time next week?',
       'time': '1h',
       'isUnread': false,
@@ -90,7 +104,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
     {
       'id': 'g3',
       'name': 'Weekend Warriors',
-      'avatar': 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=100&h=100&fit=crop',
+      'avatar':
+          'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=100&h=100&fit=crop',
       'lastMessage': 'Who\'s in for the camping trip?',
       'time': '3h',
       'isUnread': true,
@@ -100,7 +115,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
     {
       'id': 'g4',
       'name': 'Morning Run Club',
-      'avatar': 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=100&h=100&fit=crop',
+      'avatar':
+          'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=100&h=100&fit=crop',
       'lastMessage': '6 AM tomorrow at the park',
       'time': '5h',
       'isUnread': false,
@@ -110,7 +126,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
     {
       'id': 'g5',
       'name': 'Foodies Adventure',
-      'avatar': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=100&h=100&fit=crop',
+      'avatar':
+          'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=100&h=100&fit=crop',
       'lastMessage': 'Found an amazing new restaurant!',
       'time': '1d',
       'isUnread': false,
@@ -123,7 +140,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
     {
       'id': 'p1',
       'name': 'Sarah Johnson',
-      'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+      'avatar':
+          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
       'lastMessage': 'See you at the event tomorrow!',
       'time': '30m',
       'isUnread': true,
@@ -131,7 +149,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
     {
       'id': 'p2',
       'name': 'Mike Chen',
-      'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+      'avatar':
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
       'lastMessage': 'Thanks for the recommendation 👍',
       'time': '2h',
       'isUnread': false,
@@ -139,7 +158,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
     {
       'id': 'p3',
       'name': 'Emma Wilson',
-      'avatar': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
+      'avatar':
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
       'lastMessage': 'That hiking trail was amazing!',
       'time': '1d',
       'isUnread': false,
@@ -153,7 +173,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
       'title': 'New Activity Invitation',
       'message': 'Sarah invited you to "Beach Volleyball"',
       'time': '5m',
-      'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+      'avatar':
+          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
       'isRead': false,
     },
     {
@@ -162,7 +183,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
       'title': 'Activity Update',
       'message': 'Hiking in George Bass starts in 2 hours',
       'time': '1h',
-      'avatar': 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=100&h=100&fit=crop',
+      'avatar':
+          'https://images.unsplash.com/photo-1551632811-561732d1e306?w=100&h=100&fit=crop',
       'isRead': false,
     },
     {
@@ -171,7 +193,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
       'title': 'New Follower',
       'message': 'Mike Chen started following you',
       'time': '3h',
-      'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+      'avatar':
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
       'isRead': true,
     },
     {
@@ -180,7 +203,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
       'title': 'Activity Liked',
       'message': 'Emma liked your "Morning Run Club" activity',
       'time': '5h',
-      'avatar': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
+      'avatar':
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
       'isRead': true,
     },
   ];
@@ -246,7 +270,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           if (result != null && mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Contact added: ${result['name']}'),
+                                content: Text(
+                                  'Contact added: ${result['name']}',
+                                ),
                                 backgroundColor: const Color(0xFF10B981),
                               ),
                             );
@@ -262,7 +288,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const ContactSelectionScreen(),
+                              builder: (context) =>
+                                  const ContactSelectionScreen(),
                             ),
                           );
                           if (result != null && mounted) {
@@ -270,17 +297,23 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               groupChats.insert(0, {
                                 'id': 'g${groupChats.length + 1}',
                                 'name': result['groupName'],
-                                'avatar': 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=100&h=100&fit=crop',
+                                'avatar':
+                                    'https://images.unsplash.com/photo-1551632811-561732d1e306?w=100&h=100&fit=crop',
                                 'lastMessage': 'Group created',
                                 'time': 'now',
                                 'isUnread': false,
-                                'participants': (result['selectedContacts'] as List).length + 1,
+                                'participants':
+                                    (result['selectedContacts'] as List)
+                                        .length +
+                                    1,
                                 'onlineCount': 0,
                               });
                             });
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Group "${result['groupName']}" created'),
+                                content: Text(
+                                  'Group "${result['groupName']}" created',
+                                ),
                                 backgroundColor: const Color(0xFF10B981),
                               ),
                             );
@@ -309,19 +342,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: const Color(0xFF1F2937),
-            ),
+            Icon(icon, size: 20, color: const Color(0xFF1F2937)),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFF1F2937),
-                ),
+                style: const TextStyle(fontSize: 15, color: Color(0xFF1F2937)),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -347,10 +373,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: const Color(0xFFF3F4F6),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFFF3F4F6), width: 1),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
@@ -361,11 +384,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   gradient: gradient,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                child: Icon(icon, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -430,265 +449,290 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 SizedBox(height: MediaQuery.of(context).padding.top),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Messages',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Messages',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
                         ),
-                        Row(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: IconButton(
-                                padding: EdgeInsets.zero,
-                                icon: Icon(isSearching ? LucideIcons.x : LucideIcons.search, color: Colors.white, size: 20),
-                                onPressed: () {
-                                  setState(() {
-                                    isSearching = !isSearching;
-                                    if (!isSearching) {
-                                      _searchController.clear();
-                                    }
-                                  });
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: IconButton(
-                                padding: EdgeInsets.zero,
-                                icon: const Icon(LucideIcons.messageSquarePlus, color: Colors.white, size: 20),
-                                onPressed: () {
-                                  _showAddMessageMenu(context);
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (!isSearching)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                      child: Row(
+                      ),
+                      Row(
                         children: [
-                          Expanded(
-                            child: Material(
-                              color: Colors.transparent,
-                              child: Ink(
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      isGroupChatsCollapsed = false;
-                                    });
-                                    _scrollToSection(_groupChatsKey);
-                                  },
-                                  borderRadius: BorderRadius.circular(16),
-                                  splashColor: Colors.white.withOpacity(0.3),
-                                  highlightColor: Colors.white.withOpacity(0.1),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(4),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(0.25),
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: const Icon(
-                                                LucideIcons.users,
-                                                color: Colors.white,
-                                                size: 14,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 6),
-                                            const Text(
-                                              'Groups',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          '${groupChats.length}',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(
+                                isSearching
+                                    ? LucideIcons.x
+                                    : LucideIcons.search,
+                                color: Colors.white,
+                                size: 20,
                               ),
+                              onPressed: () {
+                                setState(() {
+                                  isSearching = !isSearching;
+                                  if (!isSearching) {
+                                    _searchController.clear();
+                                  }
+                                });
+                              },
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Material(
-                              color: Colors.transparent,
-                              child: Ink(
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      isGroupChatsCollapsed = false;
-                                      isDirectMessagesCollapsed = false;
-                                    });
-                                    Future.delayed(const Duration(milliseconds: 100), () {
-                                      _scrollToSection(_groupChatsKey);
-                                    });
-                                  },
-                                  borderRadius: BorderRadius.circular(16),
-                                  splashColor: Colors.white.withOpacity(0.3),
-                                  highlightColor: Colors.white.withOpacity(0.1),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(4),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(0.25),
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: const Icon(
-                                                LucideIcons.messageCircle,
-                                                color: Colors.white,
-                                                size: 14,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 6),
-                                            const Text(
-                                              'Unread',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          '$unreadCount',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Material(
-                              color: Colors.transparent,
-                              child: Ink(
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      isNotificationsCollapsed = false;
-                                    });
-                                    _scrollToSection(_notificationsKey);
-                                  },
-                                  borderRadius: BorderRadius.circular(16),
-                                  splashColor: Colors.white.withOpacity(0.3),
-                                  highlightColor: Colors.white.withOpacity(0.1),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(4),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(0.25),
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: const Icon(
-                                                LucideIcons.bell,
-                                                color: Colors.white,
-                                                size: 14,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 6),
-                                            const Text(
-                                              'Alerts',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          '$unreadNotificationsCount',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(
+                                LucideIcons.messageSquarePlus,
+                                color: Colors.white,
+                                size: 20,
                               ),
+                              onPressed: () {
+                                _showAddMessageMenu(context);
+                              },
                             ),
                           ),
                         ],
                       ),
+                    ],
+                  ),
+                ),
+                if (!isSearching)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: Ink(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    isGroupChatsCollapsed = false;
+                                  });
+                                  _scrollToSection(_groupChatsKey);
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                splashColor: Colors.white.withOpacity(0.3),
+                                highlightColor: Colors.white.withOpacity(0.1),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(
+                                                0.25,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: const Icon(
+                                              LucideIcons.users,
+                                              color: Colors.white,
+                                              size: 14,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          const Text(
+                                            'Groups',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        '${groupChats.length}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: Ink(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    isGroupChatsCollapsed = false;
+                                    isDirectMessagesCollapsed = false;
+                                  });
+                                  Future.delayed(
+                                    const Duration(milliseconds: 100),
+                                    () {
+                                      _scrollToSection(_groupChatsKey);
+                                    },
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                splashColor: Colors.white.withOpacity(0.3),
+                                highlightColor: Colors.white.withOpacity(0.1),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(
+                                                0.25,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: const Icon(
+                                              LucideIcons.messageCircle,
+                                              color: Colors.white,
+                                              size: 14,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          const Text(
+                                            'Unread',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        '$unreadCount',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: Ink(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    isNotificationsCollapsed = false;
+                                  });
+                                  _scrollToSection(_notificationsKey);
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                splashColor: Colors.white.withOpacity(0.3),
+                                highlightColor: Colors.white.withOpacity(0.1),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(
+                                                0.25,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                            child: const Icon(
+                                              LucideIcons.bell,
+                                              color: Colors.white,
+                                              size: 14,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          const Text(
+                                            'Alerts',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        '$unreadNotificationsCount',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
                 if (isSearching)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -698,15 +742,24 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         hintText: 'Search messages...',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
-                        prefixIcon: const Icon(LucideIcons.search, color: Colors.white, size: 20),
+                        hintStyle: TextStyle(
+                          color: Colors.white.withOpacity(0.6),
+                        ),
+                        prefixIcon: const Icon(
+                          LucideIcons.search,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                         filled: true,
                         fillColor: Colors.white.withOpacity(0.2),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                       onChanged: (value) {
                         setState(() {});
@@ -718,45 +771,63 @@ class _MessagesScreenState extends State<MessagesScreen> {
           ),
           Expanded(
             child: ListView(
-                controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-                children: [
-                  Container(
-                    key: _notificationsKey,
-                    child: _buildSectionHeader('NOTIFICATIONS', isNotificationsCollapsed, () {
+              controller: _scrollController,
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+              children: [
+                Container(
+                  key: _notificationsKey,
+                  child: _buildSectionHeader(
+                    'NOTIFICATIONS',
+                    isNotificationsCollapsed,
+                    () {
                       setState(() {
                         isNotificationsCollapsed = !isNotificationsCollapsed;
                       });
-                    }),
+                    },
                   ),
-                  const SizedBox(height: 16),
-                  if (!isNotificationsCollapsed)
-                    ...filteredNotifications.map((notification) => _buildNotificationItem(notification)).toList(),
-                  const SizedBox(height: 24),
-                  Container(
-                    key: _groupChatsKey,
-                    child: _buildSectionHeader('GROUP CHATS', isGroupChatsCollapsed, () {
+                ),
+                const SizedBox(height: 16),
+                if (!isNotificationsCollapsed)
+                  ...filteredNotifications.map(
+                    (notification) => _buildNotificationItem(notification),
+                  ),
+                const SizedBox(height: 24),
+                Container(
+                  key: _groupChatsKey,
+                  child: _buildSectionHeader(
+                    'GROUP CHATS',
+                    isGroupChatsCollapsed,
+                    () {
                       setState(() {
                         isGroupChatsCollapsed = !isGroupChatsCollapsed;
                       });
-                    }),
+                    },
                   ),
-                  const SizedBox(height: 16),
-                  if (!isGroupChatsCollapsed)
-                    ...filteredGroupChats.map((chat) => _buildGroupChatItem(chat)).toList(),
-                  const SizedBox(height: 24),
-                  Container(
-                    key: _directMessagesKey,
-                    child: _buildSectionHeader('DIRECT MESSAGES', isDirectMessagesCollapsed, () {
+                ),
+                const SizedBox(height: 16),
+                if (!isGroupChatsCollapsed)
+                  ...filteredGroupChats.map(
+                    (chat) => _buildGroupChatItem(chat),
+                  ),
+                const SizedBox(height: 24),
+                Container(
+                  key: _directMessagesKey,
+                  child: _buildSectionHeader(
+                    'DIRECT MESSAGES',
+                    isDirectMessagesCollapsed,
+                    () {
                       setState(() {
                         isDirectMessagesCollapsed = !isDirectMessagesCollapsed;
                       });
-                    }),
+                    },
                   ),
-                  const SizedBox(height: 16),
-                  if (!isDirectMessagesCollapsed)
-                    ...filteredPrivateChats.map((chat) => _buildPrivateChatItem(chat)).toList(),
-                ],
+                ),
+                const SizedBox(height: 16),
+                if (!isDirectMessagesCollapsed)
+                  ...filteredPrivateChats.map(
+                    (chat) => _buildPrivateChatItem(chat),
+                  ),
+              ],
             ),
           ),
         ],
@@ -764,7 +835,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title, bool isCollapsed, VoidCallback onTap) {
+  Widget _buildSectionHeader(
+    String title,
+    bool isCollapsed,
+    VoidCallback onTap,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
@@ -806,9 +881,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: isUnread
-            ? const Color(0xFFF0F9FF)
-            : Colors.white,
+        color: isUnread ? const Color(0xFFF0F9FF) : Colors.white,
         borderRadius: BorderRadius.circular(24),
         elevation: 0,
         shadowColor: Colors.black.withOpacity(0.05),
@@ -872,9 +945,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             ),
                             child: Center(
                               child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
+                                value:
+                                    loadingProgress.expectedTotalBytes != null
                                     ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
+                                          loadingProgress.expectedTotalBytes!
                                     : null,
                                 strokeWidth: 2,
                               ),
@@ -917,7 +991,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 15,
-                                color: isUnread ? Colors.black : const Color(0xFF111827),
+                                color: isUnread
+                                    ? Colors.black
+                                    : const Color(0xFF111827),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -937,7 +1013,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       Text(
                         chat['lastMessage'],
                         style: TextStyle(
-                          color: isUnread ? const Color(0xFF374151) : const Color(0xFF6B7280),
+                          color: isUnread
+                              ? const Color(0xFF374151)
+                              : const Color(0xFF6B7280),
                           fontSize: 14,
                         ),
                         maxLines: 1,
@@ -1004,9 +1082,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: isUnread
-            ? const Color(0xFFF0F9FF)
-            : Colors.white,
+        color: isUnread ? const Color(0xFFF0F9FF) : Colors.white,
         borderRadius: BorderRadius.circular(24),
         elevation: 0,
         shadowColor: Colors.black.withOpacity(0.05),
@@ -1070,9 +1146,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             ),
                             child: Center(
                               child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
+                                value:
+                                    loadingProgress.expectedTotalBytes != null
                                     ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
+                                          loadingProgress.expectedTotalBytes!
                                     : null,
                                 strokeWidth: 2,
                               ),
@@ -1109,7 +1186,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 15,
-                                color: isUnread ? Colors.black : const Color(0xFF111827),
+                                color: isUnread
+                                    ? Colors.black
+                                    : const Color(0xFF111827),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -1129,7 +1208,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       Text(
                         chat['lastMessage'],
                         style: TextStyle(
-                          color: isUnread ? const Color(0xFF374151) : const Color(0xFF6B7280),
+                          color: isUnread
+                              ? const Color(0xFF374151)
+                              : const Color(0xFF6B7280),
                           fontSize: 14,
                         ),
                         maxLines: 1,
@@ -1199,9 +1280,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: !isRead
-            ? const Color(0xFFFEF3F2)
-            : Colors.white,
+        color: !isRead ? const Color(0xFFFEF3F2) : Colors.white,
         borderRadius: BorderRadius.circular(24),
         elevation: 0,
         shadowColor: Colors.black.withOpacity(0.05),
@@ -1263,9 +1342,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             ),
                             child: Center(
                               child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
+                                value:
+                                    loadingProgress.expectedTotalBytes != null
                                     ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
+                                          loadingProgress.expectedTotalBytes!
                                     : null,
                                 strokeWidth: 2,
                               ),
@@ -1306,7 +1386,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 15,
-                                color: !isRead ? Colors.black : const Color(0xFF111827),
+                                color: !isRead
+                                    ? Colors.black
+                                    : const Color(0xFF111827),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -1326,7 +1408,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       Text(
                         notification['message'],
                         style: TextStyle(
-                          color: !isRead ? const Color(0xFF374151) : const Color(0xFF6B7280),
+                          color: !isRead
+                              ? const Color(0xFF374151)
+                              : const Color(0xFF6B7280),
                           fontSize: 14,
                         ),
                         maxLines: 2,

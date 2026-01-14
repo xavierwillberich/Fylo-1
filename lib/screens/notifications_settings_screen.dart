@@ -5,26 +5,28 @@ class NotificationsSettingsScreen extends StatefulWidget {
   const NotificationsSettingsScreen({super.key});
 
   @override
-  State<NotificationsSettingsScreen> createState() => _NotificationsSettingsScreenState();
+  State<NotificationsSettingsScreen> createState() =>
+      _NotificationsSettingsScreenState();
 }
 
-class _NotificationsSettingsScreenState extends State<NotificationsSettingsScreen> {
+class _NotificationsSettingsScreenState
+    extends State<NotificationsSettingsScreen> {
   bool _pushNotifications = true;
   bool _emailNotifications = true;
   bool _smsNotifications = false;
-  
+
   bool _activityInvites = true;
   bool _activityUpdates = true;
   bool _activityCancellations = true;
-  
+
   bool _newMessages = true;
   bool _messageReplies = true;
   bool _groupMessages = true;
-  
+
   bool _newFollowers = true;
   bool _friendRequests = true;
   bool _mentions = true;
-  
+
   bool _weeklyDigest = true;
   bool _monthlyReport = false;
   bool _tipsAndTricks = true;
@@ -64,7 +66,9 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                 value: _pushNotifications,
                 onChanged: (value) {
                   setState(() => _pushNotifications = value);
-                  _showSnackBar('Push notifications ${value ? "enabled" : "disabled"}');
+                  _showSnackBar(
+                    'Push notifications ${value ? "enabled" : "disabled"}',
+                  );
                 },
               ),
               const Divider(height: 1),
@@ -77,7 +81,9 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                 value: _emailNotifications,
                 onChanged: (value) {
                   setState(() => _emailNotifications = value);
-                  _showSnackBar('Email notifications ${value ? "enabled" : "disabled"}');
+                  _showSnackBar(
+                    'Email notifications ${value ? "enabled" : "disabled"}',
+                  );
                 },
               ),
               const Divider(height: 1),
@@ -90,7 +96,9 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                 value: _smsNotifications,
                 onChanged: (value) {
                   setState(() => _smsNotifications = value);
-                  _showSnackBar('SMS notifications ${value ? "enabled" : "disabled"}');
+                  _showSnackBar(
+                    'SMS notifications ${value ? "enabled" : "disabled"}',
+                  );
                 },
               ),
             ],
@@ -126,7 +134,8 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                 title: 'Activity Cancellations',
                 subtitle: 'When an activity is cancelled',
                 value: _activityCancellations,
-                onChanged: (value) => setState(() => _activityCancellations = value),
+                onChanged: (value) =>
+                    setState(() => _activityCancellations = value),
               ),
             ],
           ),
@@ -240,7 +249,10 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
     );
   }
 
-  Widget _buildSection({required String title, required List<Widget> children}) {
+  Widget _buildSection({
+    required String title,
+    required List<Widget> children,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -315,7 +327,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF6366F1),
+            activeThumbColor: const Color(0xFF6366F1),
           ),
         ],
       ),
@@ -324,10 +336,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 }

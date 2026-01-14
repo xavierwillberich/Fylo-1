@@ -2,17 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../models/event.dart';
-import 'dart:math' as math;
 
 class EventCard extends StatelessWidget {
   final Event event;
   final VoidCallback onTap;
 
-  const EventCard({
-    super.key,
-    required this.event,
-    required this.onTap,
-  });
+  const EventCard({super.key, required this.event, required this.onTap});
 
   IconData _getWeatherIcon() {
     switch (event.weather) {
@@ -41,10 +36,7 @@ class EventCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: const BoxDecoration(
             border: Border(
-              bottom: BorderSide(
-                color: Color(0xFFF3F4F6),
-                width: 1,
-              ),
+              bottom: BorderSide(color: Color(0xFFF3F4F6), width: 1),
             ),
           ),
           child: Row(
@@ -74,7 +66,10 @@ class EventCard extends StatelessWidget {
                               width: 128,
                               height: 128,
                               color: Colors.grey[100],
-                              child: const Icon(Icons.error, color: Colors.grey),
+                              child: const Icon(
+                                Icons.error,
+                                color: Colors.grey,
+                              ),
                             ),
                           )
                         : Container(
@@ -104,7 +99,10 @@ class EventCard extends StatelessWidget {
                     top: 8,
                     right: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.6),
                         borderRadius: BorderRadius.circular(12),
@@ -148,10 +146,7 @@ class EventCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Center(
-                            child: Text(
-                              '📍',
-                              style: TextStyle(fontSize: 12),
-                            ),
+                            child: Text('📍', style: TextStyle(fontSize: 12)),
                           ),
                         ),
                         const SizedBox(width: 8),
